@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2023 - TortoiseGit
+// Copyright (C) 2008-2024 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -315,8 +315,7 @@ public:
 	CString GetHomeDirectory() const;
 	CString GetGitLocalConfig() const;
 	CString GetGitGlobalConfig() const;
-	CString GetGitGlobalXDGConfigPath() const;
-	CString GetGitGlobalXDGConfig() const;
+	CString GetGitGlobalXDGConfig(bool returnDirectory = false) const;
 	CString GetGitSystemConfig() const;
 	CAutoRepository GetGitRepository() const;
 	static CStringA GetGitPathStringA(const CString &path);
@@ -434,6 +433,7 @@ public:
 		LOG_ORDER_CHRONOLOGIALREVERSED,
 		LOG_ORDER_TOPOORDER,
 		LOG_ORDER_DATEORDER,
+		LOG_ORDER_AUTHORDATEORDER,
 	};
 
 	typedef enum

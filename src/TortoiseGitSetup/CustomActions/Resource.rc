@@ -23,12 +23,14 @@ LANGUAGE LANG_NEUTRAL, SUBLANG_DEFAULT
 // RCDATA
 //
 
+#ifdef INCLUDE_RESTARTEXPLORER
 #if defined(ARM64)
 IDR_RESTARTEXPLORER     RCDATA                  "..\\..\\..\\bin\\ReleaseARM64\\bin\\RestartExplorer.exe"
 #elif defined(WIN64)
 IDR_RESTARTEXPLORER     RCDATA                  "..\\..\\..\\bin\\Release64\\bin\\RestartExplorer.exe"
 #else
 IDR_RESTARTEXPLORER     RCDATA                  "..\\..\\..\\bin\\Release\\bin\\RestartExplorer.exe"
+#endif
 #endif
 #endif    // Neutral (Standard) resources
 /////////////////////////////////////////////////////////////////////////////
@@ -60,7 +62,7 @@ END
 3 TEXTINCLUDE 
 BEGIN
     "\r\n"
-    "\0"
+    "#include ""CustomActions.rc2""  // non-Microsoft Visual C++ edited resources\r\n\0"
 END
 
 #endif    // APSTUDIO_INVOKED
@@ -76,6 +78,7 @@ END
 // Generated from the TEXTINCLUDE 3 resource.
 //
 
+#include "CustomActions.rc2"  // non-Microsoft Visual C++ edited resources
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED

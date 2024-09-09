@@ -154,6 +154,7 @@
 #define IDI_INDETERMINATE               368
 #define IDI_CHERRYPICK                  369
 #define IDR_TGITLOGO                    370
+#define IDI_ACTIONERROR                 371
 #define IDS_CHSTAT_FILECOL              1000
 #define IDS_CHSTAT_WCCOL                1001
 #define IDS_CHSTAT_REPOCOL              1002
@@ -837,6 +838,7 @@
 #define IDS_STATUSLIST_WARN_MAXDIFF     1391
 #define IDS_PROC_MARK_ASSUMEVALID       1392
 #define IDS_PROC_MARK_SKIPWORKTREE      1393
+#define IDS_REMOVEWITHFORCE             1394
 #define IDS_LOG_CHRONOLOGICALREVERSEDORDER 1395
 #define IDS_TORTOISEGITDEFAULT          1396
 #define IDS_DELETING_REMOTE_REFS        1397
@@ -1486,8 +1488,11 @@
 #define IDC_CHECKMODIFIED               1706
 #define IDS_PROC_UNLOCKED_WORKTREES     1706
 #define IDC_CHECKFILES                  1707
+#define IDS_PROC_LOG_FETCHFILESERROR    1707
 #define IDC_CHECKSUBMODULES             1708
+#define IDS_LASTCOMMITTER               1708
 #define IDC_CHECKDELETED                1709
+#define IDS_DATELASTAUTHOR              1709
 #define IDC_BUTTON_UPDATE               1710
 #define IDC_LIST_DOWNLOADS              1711
 #define IDC_STATIC_REVISION             1712
@@ -2142,7 +2147,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        371
+#define _APS_NEXT_RESOURCE_VALUE        372
 #define _APS_NEXT_COMMAND_VALUE         32881
 #define _APS_NEXT_CONTROL_VALUE         1860
 #define _APS_NEXT_SYMED_VALUE           201

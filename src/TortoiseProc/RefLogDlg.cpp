@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2009-2021, 2023 - TortoiseGit
+// Copyright (C) 2009-2021, 2023-2024 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -62,7 +62,6 @@ END_MESSAGE_MAP()
 
 LRESULT CRefLogDlg::OnRefLogChanged(WPARAM /*wParam*/, LPARAM /*lParam*/)
 {
-	m_RefList.m_RevCache.clear();
 	OnCbnSelchangeRef();
 	return 0;
 }
@@ -83,9 +82,7 @@ BOOL CRefLogDlg::OnInitDialog()
 	AddOthersToAnchor();
 	this->EnableSaveRestore(L"RefLogDlg");
 
-	CString sWindowTitle;
-	GetWindowText(sWindowTitle);
-	CAppUtils::SetWindowTitle(m_hWnd, g_Git.m_CurrentDir, sWindowTitle);
+	CAppUtils::SetWindowTitle(*this, g_Git.m_CurrentDir);
 
 	m_ChooseRef.SetMaxHistoryItems(0x7FFFFFFF);
 
@@ -131,8 +128,6 @@ void CRefLogDlg::OnBnClickedClearStash()
 			return;
 		}
 
-		m_RefList.m_RevCache.clear();
-
 		OnCbnSelchangeRef();
 	}
 }
@@ -140,8 +135,9 @@ void CRefLogDlg::OnBnClickedClearStash()
 void CRefLogDlg::OnCbnSelchangeRef()
 {
 	m_CurrentBranch = m_ChooseRef.GetString(); // remember selected branch
+	m_RefList.m_CurrentBranch = m_CurrentBranch;
+	m_RefList.m_RevCache.clear();
 	m_RefList.ClearText();
-
 	m_RefList.SetRedraw(false);
 
 	if (CString err; GitRevLoglist::GetRefLog(m_CurrentBranch, m_RefList.m_RevCache, err))
@@ -224,9 +220,6 @@ void CRefLogDlg::Refresh()
 	}
 	if (!found)
 		m_ChooseRef.SetCurSel(0); /* Choose HEAD */
-
-	m_RefList.m_CurrentBranch = m_CurrentBranch;
-	m_RefList.m_RevCache.clear();
 
 	OnCbnSelchangeRef();
 }

@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2015-2017, 2021 - TortoiseGit
+// Copyright (C) 2015-2017, 2021, 2023 - TortoiseGit
 // Copyright (C) 2003-2011 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -97,6 +97,20 @@ TEST(CStringUtils, RemoveAccelerators)
 	EXPECT_STREQ(L"Some & text", text6);
 }
 
+TEST(CStringUtils, GetAccellerator)
+{
+	EXPECT_EQ(L'\0', CStringUtils::GetAccellerator(L""));
+	EXPECT_EQ(L'\0', CStringUtils::GetAccellerator(L"&"));
+	EXPECT_EQ(L'\0', CStringUtils::GetAccellerator(L"NoAccellerator"));
+	EXPECT_EQ(L'A', CStringUtils::GetAccellerator(L"&Accellerator"));
+	EXPECT_EQ(L'C', CStringUtils::GetAccellerator(L"Ac&cellerator"));
+	EXPECT_EQ(L'\0', CStringUtils::GetAccellerator(L"Accellerator&"));
+	EXPECT_EQ(L'\0', CStringUtils::GetAccellerator(L"Accellerator&&"));
+	EXPECT_EQ(L'\0', CStringUtils::GetAccellerator(L"Some & text"));
+	EXPECT_EQ(L'\0', CStringUtils::GetAccellerator(L"&&Accellerator"));
+	EXPECT_EQ(L'L', CStringUtils::GetAccellerator(L"Acce&&&llerator"));
+	EXPECT_EQ(L'X', CStringUtils::GetAccellerator(L"Some & te&xt"));
+}
 TEST(CStringUtils, ParseEmailAddress)
 {
 	CString mail, name;
@@ -348,4 +362,26 @@ TEST(CStringUtils, UnescapeGitQuotePath)
 	// taken from Git tests:
 	EXPECT_STREQ(L"\u6FF1\u91CE/file", CStringUtils::UnescapeGitQuotePath(L"\\346\\277\\261\\351\\207\\216/file"));
 	EXPECT_STREQ(L"\u6FF1\u91CE\u7D14", CStringUtils::UnescapeGitQuotePath(L"\\346\\277\\261\\351\\207\\216\\347\\264\\224"));
+}
+
+TEST(CStringUtils, EnsureCRLF)
+{
+	EXPECT_STREQ(L"", CStringUtils::EnsureCRLF(L""));
+	EXPECT_STREQ(L"\r\n", CStringUtils::EnsureCRLF(L"\n"));
+	EXPECT_STREQ(L"\r\n", CStringUtils::EnsureCRLF(L"\r\n"));
+	EXPECT_STREQ(L"\r\n", CStringUtils::EnsureCRLF(L"\r"));
+	EXPECT_STREQ(L"Some\r\nthing", CStringUtils::EnsureCRLF(L"Some\nthing"));
+	EXPECT_STREQ(L"Some\r\nthing", CStringUtils::EnsureCRLF(L"Some\rthing"));
+	EXPECT_STREQ(L"Some\r\nthing\r\n", CStringUtils::EnsureCRLF(L"Some\nthing\n"));
+	EXPECT_STREQ(L"Some\\nthing", CStringUtils::EnsureCRLF(L"Some\\nthing"));
+	EXPECT_STREQ(L"Some\r\n\r\nthing\r\n", CStringUtils::EnsureCRLF(L"Some\n\nthing\n"));
+	EXPECT_STREQ(L"Some\r\n\r\nthing\r\n", CStringUtils::EnsureCRLF(L"Some\r\r\nthing\r"));
+	EXPECT_STREQ(L"Some\r\nthing\r\n", CStringUtils::EnsureCRLF(L"Some\r\nthing\n"));
+	EXPECT_STREQ(L"Some\r\nthing\r\n", CStringUtils::EnsureCRLF(L"Some\r\nthing\r"));
+	EXPECT_STREQ(L"\r\nSome\r\n\r\nthing\r\n", CStringUtils::EnsureCRLF(L"\nSome\r\n\nthing\n"));
+	EXPECT_STREQ(L"\r\nSome\r\n\r\n\r\nthing\r\n", CStringUtils::EnsureCRLF(L"\nSome\r\r\n\nthing\n"));
+	EXPECT_STREQ(L"\r\nSome\r\n\r\n\r\nthing\r\n", CStringUtils::EnsureCRLF(L"\nSome\r\r\n\rthing\n"));
+	EXPECT_STREQ(L"\r\nSome\r\n\r\nthing\r\n", CStringUtils::EnsureCRLF(L"\nSome\r\n\r\nthing\n"));
+	EXPECT_STREQ(L"\r\nSome\r\n\r\nthing\r\n", CStringUtils::EnsureCRLF(L"\nSome\r\n\rthing\r"));
+	EXPECT_STREQ(L"\r\nSome\r\n\r\n\r\nthing\r\n", CStringUtils::EnsureCRLF(L"\nSome\n\r\rthing\n"));
 }

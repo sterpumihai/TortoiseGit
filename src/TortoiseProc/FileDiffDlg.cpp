@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2023 - TortoiseGit
+// Copyright (C) 2008-2024 - TortoiseGit
 // Copyright (C) 2003-2008, 2018 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -165,12 +165,10 @@ BOOL CFileDiffDlg::OnInitDialog()
 	CResizableStandAloneDialog::OnInitDialog();
 	CString temp;
 
-	CString sWindowTitle;
-	GetWindowText(sWindowTitle);
 	CString pathText = g_Git.m_CurrentDir;
 	if (!m_path.IsEmpty())
 		pathText = g_Git.CombinePath(m_path);
-	CAppUtils::SetWindowTitle(m_hWnd, pathText, sWindowTitle);
+	CAppUtils::SetWindowTitle(*this, pathText);
 
 	this->m_ctrRev1Edit.Init();
 	this->m_ctrRev2Edit.Init();
@@ -597,7 +595,7 @@ void CFileDiffDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 		popup.AppendMenu(MF_SEPARATOR, NULL);
 		if (!m_bIsBare)
 		{
-			if (!m_rev1.m_CommitHash.IsEmpty() && (m_rev2.m_CommitHash.IsEmpty() || (!m_rev2.m_CommitHash.IsEmpty() && !(m_arFilteredList[firstEntry]->m_Action & CTGitPath::LOGACTIONS_ADDED))))
+			if (!m_rev1.m_CommitHash.IsEmpty() && (m_rev2.m_CommitHash.IsEmpty() || (!m_rev2.m_CommitHash.IsEmpty())))
 			{
 				menuText.Format(IDS_FILEDIFF_POPREVERTTOREV, static_cast<LPCWSTR>(GetCommitTitle(m_rev1)));
 				popup.AppendMenuIcon(ID_REVERT1, menuText, IDI_REVERT);
@@ -659,10 +657,10 @@ void CFileDiffDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 			}
 			break;
 		case ID_REVERT1:
-			RevertSelectedItemToVersion(m_rev1.m_CommitHash.ToString(), true);
+			RevertSelectedItemToVersion(m_rev1.m_CommitHash, true);
 			break;
 		case ID_REVERT2:
-			RevertSelectedItemToVersion(m_rev2.m_CommitHash.ToString(), false);
+			RevertSelectedItemToVersion(m_rev2.m_CommitHash, false);
 			break;
 		case ID_BLAME:
 			{
@@ -1324,9 +1322,9 @@ void CFileDiffDlg::OnTextUpdate(CACEdit * /*pEdit*/)
 	this->m_cFileList.ShowText(L"Wait For input validate version");
 }
 
-int CFileDiffDlg::RevertSelectedItemToVersion(const CString& rev, bool isOldVersion)
+int CFileDiffDlg::RevertSelectedItemToVersion(const CGitHash& rev, bool isOldVersion)
 {
-	if (rev.IsEmpty() || rev == GIT_REV_ZERO)
+	if (rev.IsEmpty())
 		return 0;
 
 	const bool useRecycleBin = CRegDWORD(L"Software\\TortoiseGit\\RevertWithRecycleBin", TRUE);
@@ -1341,6 +1339,8 @@ int CFileDiffDlg::RevertSelectedItemToVersion(const CString& rev, bool isOldVers
 		if ((isOldVersion && fentry->m_Action == CTGitPath::LOGACTIONS_ADDED) || (!isOldVersion && fentry->m_Action == CTGitPath::LOGACTIONS_DELETED))
 		{
 			cmd.Format(L"git.exe rm --cached -- \"%s\"", static_cast<LPCWSTR>(fentry->GetGitPathString()));
+			if (isOldVersion && fentry->m_Action == CTGitPath::LOGACTIONS_ADDED) // HACK for issue #3881
+				cmd.Format(L"git.exe rm --cached --ignore-unmatch -- \"%s\"", static_cast<LPCWSTR>(fentry->GetGitPathString()));
 			if ((isOldVersion && fentry->m_Action == CTGitPath::LOGACTIONS_ADDED && m_rev2.m_CommitHash.IsEmpty()) || (!isOldVersion && fentry->m_Action == CTGitPath::LOGACTIONS_DELETED && m_rev1.m_CommitHash.IsEmpty()))
 				CTGitPath(g_Git.CombinePath(fentry->GetGitPathString())).Delete(useRecycleBin, true);
 			else if (CTGitPath path = g_Git.CombinePath(fentry->GetGitPathString()); useRecycleBin && !path.IsDirectory())
@@ -1348,7 +1348,7 @@ int CFileDiffDlg::RevertSelectedItemToVersion(const CString& rev, bool isOldVers
 		}
 		else if (isOldVersion && fentry->m_Action == CTGitPath::LOGACTIONS_REPLACED)
 		{
-			cmd.Format(L"git.exe checkout %s -- \"%s\"", static_cast<LPCWSTR>(rev), static_cast<LPCWSTR>(fentry->GetGitOldPathString()));
+			cmd.Format(L"git.exe checkout %s -- \"%s\"", static_cast<LPCWSTR>(rev.ToString()), static_cast<LPCWSTR>(fentry->GetGitOldPathString()));
 			if (m_rev2.m_CommitHash.IsEmpty())
 				CTGitPath(g_Git.CombinePath(fentry->GetGitPathString())).Delete(useRecycleBin, true);
 			else if (CTGitPath path = g_Git.CombinePath(fentry->GetGitOldPathString()); useRecycleBin && !path.IsDirectory())
@@ -1356,7 +1356,7 @@ int CFileDiffDlg::RevertSelectedItemToVersion(const CString& rev, bool isOldVers
 		}
 		else
 		{
-			cmd.Format(L"git.exe checkout %s -- \"%s\"", static_cast<LPCWSTR>(rev), static_cast<LPCWSTR>(fentry->GetGitPathString()));
+			cmd.Format(L"git.exe checkout %s -- \"%s\"", static_cast<LPCWSTR>(rev.ToString()), static_cast<LPCWSTR>(fentry->GetGitPathString()));
 			if (!isOldVersion && fentry->m_Action == CTGitPath::LOGACTIONS_REPLACED && m_rev1.m_CommitHash.IsEmpty())
 				CTGitPath(g_Git.CombinePath(fentry->GetGitOldPathString())).Delete(useRecycleBin, true);
 			if (CTGitPath path = g_Git.CombinePath(fentry->GetGitPathString()); useRecycleBin && !path.IsDirectory())
@@ -1372,7 +1372,7 @@ int CFileDiffDlg::RevertSelectedItemToVersion(const CString& rev, bool isOldVers
 	}
 
 	CString out;
-	out.FormatMessage(IDS_STATUSLIST_FILESREVERTED, count, static_cast<LPCWSTR>(rev));
+	out.FormatMessage(IDS_STATUSLIST_FILESREVERTED, count, static_cast<LPCWSTR>(rev.ToString()));
 	CMessageBox::Show(GetSafeHwnd(), out, L"TortoiseGit", MB_OK);
 	return 0;
 }
@@ -1549,11 +1549,14 @@ void CFileDiffDlg::FillPatchView(bool onlySetTimer)
 			auto fentry = m_arFilteredList[nSelect];
 			CString cmd;
 			if (m_rev2.m_CommitHash.IsEmpty())
-				cmd.Format(L"git.exe diff%s %s -- \"%s\"", static_cast<LPCWSTR>(ignore), static_cast<LPCWSTR>(m_rev1.m_CommitHash.ToString()), static_cast<LPCWSTR>(fentry->GetGitPathString()));
+				cmd.Format(L"git.exe diff%s %s --", static_cast<LPCWSTR>(ignore), static_cast<LPCWSTR>(m_rev1.m_CommitHash.ToString()));
 			else if (m_rev1.m_CommitHash.IsEmpty())
-				cmd.Format(L"git.exe diff%s -R %s -- \"%s\"", static_cast<LPCWSTR>(ignore), static_cast<LPCWSTR>(m_rev2.m_CommitHash.ToString()), static_cast<LPCWSTR>(fentry->GetGitPathString()));
+				cmd.Format(L"git.exe diff%s -R %s --", static_cast<LPCWSTR>(ignore), static_cast<LPCWSTR>(m_rev2.m_CommitHash.ToString()));
 			else
-				cmd.Format(L"git.exe diff%s %s..%s -- \"%s\"", static_cast<LPCWSTR>(ignore), static_cast<LPCWSTR>(m_rev1.m_CommitHash.ToString()), static_cast<LPCWSTR>(m_rev2.m_CommitHash.ToString()), static_cast<LPCWSTR>(fentry->GetGitPathString()));
+				cmd.Format(L"git.exe diff%s %s..%s --", static_cast<LPCWSTR>(ignore), static_cast<LPCWSTR>(m_rev1.m_CommitHash.ToString()), static_cast<LPCWSTR>(m_rev2.m_CommitHash.ToString()));
+			if (!fentry->GetGitOldPathString().IsEmpty())
+				cmd.AppendFormat(L" \"%s\"", static_cast<LPCWSTR>(fentry->GetGitOldPathString()));
+			cmd.AppendFormat(L" \"%s\"", static_cast<LPCWSTR>(fentry->GetGitPathString()));
 			g_Git.Run(cmd, &out, CP_UTF8);
 		}
 	}

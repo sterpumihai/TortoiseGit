@@ -1,8 +1,8 @@
 ; URLs and filenames of PuTTY tools
 ; Always make sure the signatures are verified before changing this file!
-https://the.earth.li/~sgtatham/putty/0.79/w32/pageant.exe	pageant-x86.exe	ba9495d383b9cb928aeaf93f185890f358b7f95641c7d7bca182d8bc57a8b000
-https://the.earth.li/~sgtatham/putty/0.79/w64/pageant.exe	pageant-x64.exe	e9a85bc507f43e838b12650cecc121a0f5cb2baaa717c1c47d31c4bdbedaa03b
-https://the.earth.li/~sgtatham/putty/0.79/wa64/pageant.exe	pageant-arm64.exe	e98969414b6cc4488e431d8ef6fcc59f76a2555b17acd3a82c6f13e88ef2b042
-https://the.earth.li/~sgtatham/putty/0.79/w32/puttygen.exe	puttygen-x86.exe	79d39954174295e301a0221dbba42c38c1fd335c7f4da2b264b0870217d9ed90
-https://the.earth.li/~sgtatham/putty/0.79/w64/puttygen.exe	puttygen-x64.exe	f8fec1562b2429f98771bcb7458128d9f66a66ab9a351a89d76cb9dddfc5bd0b
-https://the.earth.li/~sgtatham/putty/0.79/wa64/puttygen.exe	puttygen-arm64.exe	364e7a319b51782dc56dbec7ea4d94d77f4a7bc0508a4ef1af68520b74ed61d1
+https://the.earth.li/~sgtatham/putty/0.81/w32/pageant.exe	pageant-x86.exe	7addf7a1de108be44d4de20f7f6c35760087486eba44655d2e6b3b0dccffd519
+https://the.earth.li/~sgtatham/putty/0.81/w64/pageant.exe	pageant-x64.exe	6efb0191e0bfd6ae9177eb5077ce7b765859cd548ac181a128b2eaf3fcf635a6
+https://the.earth.li/~sgtatham/putty/0.81/wa64/pageant.exe	pageant-arm64.exe	96940266ecb61fa3cabfe35c4a8bea197d86df184f5dd6f830f81a88e9f3041d
+https://the.earth.li/~sgtatham/putty/0.81/w32/puttygen.exe	puttygen-x86.exe	577de7e22defc950bc5450557af31befcfc050743ffd94c11ec49db45b072480
+https://the.earth.li/~sgtatham/putty/0.81/w64/puttygen.exe	puttygen-x64.exe	cf4151ebdb7e6e1c9cc1087114461383ea5fb33171061ad3810e555568cc20e3
+https://the.earth.li/~sgtatham/putty/0.81/wa64/puttygen.exe	puttygen-arm64.exe	2d41ec500e87bfda9ef4159aaf6d336cedbf9605c6de93c13a41622274142c15

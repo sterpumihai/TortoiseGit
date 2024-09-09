@@ -1,14 +1,55 @@
-﻿= Release 2.16.0 =
+﻿= Release 2.17.0 =
 Released: unreleased
 
 == Features ==
+ * Updated pcre2 to 10.44
+ * Update editorconfig to 0.12.9
+ * Update Scintilla to 5.5.2 and Lexilla to 5.4.0
+ * Updated libgit to version 2.46 based on Git for Windows sources
+ * Fixed issue #4143: BrowseRefsDlg: Order the branches by commit date instead of date (add committer name/date columns)
+ * Fixed issue #4147: Allow sorting Log view by `--author-date-order`
+ * Fixed issue #4137: "Detach" option ignored when making a new worktree
+
+== Bug Fixes ==
+ * Fixed issue #4132: Error "Could not get next commit. libgit returns: -4" in Log Messages dialog on commit with author date 1970-01-01T00:00:00Z
+ * Fixed issue #4126: Capitalize the first letter in the Push dialog
+ * Fixed issue #4133: libgit2 returned: failed to parse revision specifier (ref ending with an `@` character)
+ * Fixed issue #4141: Cannot remove remote: "usage: git remote remove <name>"
+ * Fixed issue #4145: "Push default" option for remote resetted after adding a new remote
+ * Fixed issue #4159: Closing the git log window crashes TortoiseGit on Windows 7
+ * Fixed issue #4140: TortoiseGitMerge Dark mode flashes white when maximized
+ * Fixed issue #4148: Dialogs 1 doesn't have documentation for the Default limitation of log messages fields
+ * Fixed issue #4075: Dark theme revision graph text color contrast too low
+ * Fixed issue #4165: Changing rebase settings during rebase can corrupt commit (squash after finishing edit)
+ * Fixed issue #3995: Dark theme - selected items not visible
+
+= Release 2.16.0 =
+Released: 2024-04-30
+
+Support for Windows 7 and 8 will be dropped with one of the next releases.
+
+Contains a fix for a critical vulnerability (CVE-2024-31497) in PuTTY with 521-bit ECDSA keys, see notes for release 2.15.0.1.
+
+== Features ==
  * Updated OGDF to 2023.09 (Elderberry)
- * Update Scintilla to 5.3.8 and Lexilla to 5.2.8
+ * Update Scintilla to 5.5.0 and Lexilla to 5.3.2
+ * Updated zlib to 1.3.1
  * TortoiseGitMerge: Add ignore line endings button to Ribbon
  * Allow BugTraq "Select issue"-button at the same time as the textbox
  * Add support for GIT_TEMPLATE_DIR environment variable
  * Updated libgit to 2.43 based on Git for Windows sources
+ * Updated libgit2 to 1.8.0
+   libgit2 now supports worktree config
+ * Updated pcre2 to 10.43
  * Update json library to 3.11.3
+ * Update editorconfig to 0.12.7
+ * Fixed issue #3881: Compare Revisions - Revert - can not undo an Add action
+ * Fixed issue #4097: Revert to parent version menu missing for added files in Log Viewer
+ * Fixed issue #4112: After conducting a 'hard' reset, "git clean" should be offered
+ * Fixed issue #3325: Display repository name first in window title
+   Can be controlled using the DialogTitles advanced setting.
+ * Fixed issue #3981: Add stash controls to the Switch/Checkout progress dialog
+ * Fixed issue #4015: Add --force option for worktree remove
 
 == Bug Fixes ==
  * Fixed issue #4085: ImportPatch is closing even click "NO"
@@ -20,6 +61,27 @@ Released: unreleased
  * Fixed issue #4096: Git configuration under XDG_CONFIG_HOME is not recognized correctly
  * TortoiseGitBlame: Fix blaming a file from another working tree
  * Fixed issue #4073: TortoiseGit extremely slow on network shares / UNC paths since 2.14
+ * Fixed issue #4106: Submodule Update with force not working when using the Git Sync Dialog
+ * Fixed issue #4110: TortoiseGitMerge: Ribbon becomes empty after maximizing on Windows 11
+ * Fixed issue #4004: TortoiseGit closes window after commit when pressing push when the owning explorer window has been closed
+ * Fixed issue #3909: App freezes when pasting from a closed logs window
+ * Fixed issue #3959: The slash direction of the abbreviated path displayed in the dialog box is different
+ * Fixed issue #4122: TortoiseGitMerge "Encountered an improper argument" error message
+
+== Known issues ==
+ * Issue #4013: Incorrect info displayed in title bar of Windows Explorer windows
+   At the moment the numbers are only updated when the index or the current branch change.
+
+= Release 2.15.0.1 =
+Released: 2024-04-15
+
+PuTTY 0.81 fixes a critical vulnerability CVE-2024-31497 in the use of 521-bit ECDSA keys (ecdsa-sha2-nistp521). If you have used a 521-bit ECDSA private key with any previous version of PuTTY, consider the private key compromised: remove the public key from authorized_keys files, and generate a new key pair.
+
+However, this only affects that one algorithm and key size. No other size of ECDSA key is affected, and no other key type is affected.
+
+== Bug Fixes ==
+ * Update TortoiseGitPlink to PuTTY Plink 0.81
+ * Update shipped PuTTY binaries to 0.81
 
 = Release 2.15.0 =
 Released: 2023-10-03
@@ -48,7 +110,7 @@ Support for Windows 7 and 8 will be dropped with one of the next releases.
  * Lots of refactorings and performance optimizations
  * Fixed issue #4040: TortoiseGitBlame: Ability to select multiple commits (line highlighting)
  * Make TortoiseGitMerge and SSHAskPass multi-monitor DPI aware
- * Fixed issue #3698: "Resolve conflict using theirs" is extremely slow 
+ * Fixed issue #3698: "Resolve conflict using theirs" is extremely slow
  * Update editorconfig to 0.12.6
  * Fixed issue #3745: Support show log for both A..B and B..A
  * Fixed issue #2754: Add hint for pressing F5 for Refresh in TortoiseGit Commit window
@@ -67,10 +129,6 @@ Support for Windows 7 and 8 will be dropped with one of the next releases.
  * Fixed issue #4057: "Clean up" fails to delete files with Unicode characters in name if core.quotepath is not explicitly set
  * Fixed issue #4058: Performance issue when the Git index contains a large number of files
  * Fixed issue #3874: TortoiseGitMerge GUI elements overlap with Ribbon on Windows 7
-
-== Known issues ==
- * Issue #4013: Incorrect info displayed in title bar of Windows Explorer windows
-   At the moment the numbers are only updated when the index or the current branch change.
 
 = Release 2.14.0.1 =
 Released: 2023-04-15
@@ -439,7 +497,7 @@ Released: 2019-02-28
  * Improve documentation for alternative unified diff viewer configuration
  * TGitCache: Speed up scanning of folders with lots of unversioned files
  * BrowseRefsDlg: Allow to delete multiple remote branches in batch
- * Rebase: Document start, abort and finish in reflog 
+ * Rebase: Document start, abort and finish in reflog
  * Add TortoiseGitUDiff to Open With list
  * Update editorconfig to 0.12.4
  * Fixed issue #3295: TortoiseGitPlink does not work with Git protocol ver. 2

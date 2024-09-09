@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2023 - TortoiseGit
+// Copyright (C) 2008-2024 - TortoiseGit
 // Copyright (C) 2003-2008, 2013-2015 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -320,6 +320,7 @@ void CGitStatusListCtrl::Init(DWORD dwColumns, const CString& sColumnInfoContain
 	if (!CTGitPath(g_Git.m_CurrentDir).HasLFS())
 		allowedColumns &= ~GITSLC_COLLFSLOCK;
 
+	static_assert(_countof(standardColumnNames) == GITSLC_NUMCOLUMNS);
 	m_ColumnManager.SetNames(standardColumnNames,GITSLC_NUMCOLUMNS);
 	constexpr int columnVersion = 7; // adjust when changing number/names/etc. of columns
 	m_ColumnManager.ReadSettings(m_dwDefaultColumns, 0xffffffff & ~(allowedColumns | m_dwDefaultColumns), sColumnInfoContainer, columnVersion, GITSLC_NUMCOLUMNS);
@@ -1840,7 +1841,7 @@ void CGitStatusListCtrl::OnContextMenuList(CWnd * pWnd, CPoint point)
 					popup.AppendMenuIcon(IDGITLC_REVERTTOREV, IDS_LOG_POPUP_REVERTTOREV, IDI_REVERT);
 				}
 
-				if ((m_dwContextMenus & GetContextMenuBit(IDGITLC_REVERTTOPARENT)) && !m_CurrentVersion.IsEmpty() && !(wcStatus & CTGitPath::LOGACTIONS_ADDED))
+				if ((m_dwContextMenus & GetContextMenuBit(IDGITLC_REVERTTOPARENT)) && !m_CurrentVersion.IsEmpty())
 				{
 					CGitHash parentHash;
 					CString title;
@@ -4592,14 +4593,17 @@ int CGitStatusListCtrl::RevertSelectedItemToVersion(bool parent)
 		CString filename = fentry->GetGitPathString();
 		if (!fentry->GetGitOldPathString().IsEmpty())
 			filename = fentry->GetGitOldPathString();
-		if (CTGitPath path = g_Git.CombinePath(filename); useRecycleBin && !path.IsDirectory())
+		boolean isAdded = parent && (fentry->m_Action & CTGitPath::LOGACTIONS_ADDED);
+		if (CTGitPath path = g_Git.CombinePath(filename); useRecycleBin && !isAdded && !path.IsDirectory())
 			path.Delete(useRecycleBin, true);
 		CString cmd, out;
-		cmd.Format(L"git.exe checkout %s -- \"%s\"", static_cast<LPCWSTR>(version), static_cast<LPCWSTR>(filename));
+		cmd.Format(L"git.exe checkout %s -- \"%s\"", static_cast<LPCWSTR>(version), static_cast<LPCWSTR>(filename)); // remember to use --end-of-options as soon as version is not a hash any more
+		if (isAdded) // HACK for issue #4097
+			cmd.Format(L"git.exe rm --cached --ignore-unmatch -- \"%s\"", static_cast<LPCWSTR>(filename));
 		if (g_Git.Run(cmd, &out, CP_UTF8))
 		{
-			if (MessageBox(out, L"TortoiseGit", MB_ICONEXCLAMATION | MB_OKCANCEL) == IDCANCEL)
-				continue;
+			if (CMessageBox::Show(GetSafeHwnd(), out, L"TortoiseGit", 1, IDI_WARNING, CString(MAKEINTRESOURCE(IDS_IGNOREBUTTON)), CString(MAKEINTRESOURCE(IDS_ABORTBUTTON))) == 2)
+				break;
 		}
 		else
 			versionMap[version]++;

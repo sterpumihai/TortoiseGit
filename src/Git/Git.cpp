@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2023 - TortoiseGit
+// Copyright (C) 2008-2024 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -31,6 +31,7 @@
 #include "MassiveGitTaskBase.h"
 #include "git2/sys/filter.h"
 #include "git2/sys/transport.h"
+#include "git2/sys/errors.h"
 #include "../libgit2/filter-filter.h"
 #include "../libgit2/ssh-wintunnel.h"
 
@@ -1041,6 +1042,8 @@ CString CGit::GetLogCmd(CString range, const CTGitPath* path, int mask, CFilterD
 		param += L" --topo-order";
 	else if (logOrderBy == LOG_ORDER_DATEORDER)
 		param += L" --date-order";
+	else if (logOrderBy == LOG_ORDER_AUTHORDATEORDER)
+		param += L" --author-date-order";
 
 	CString cmd;
 	CString file;
@@ -2261,10 +2264,12 @@ BOOL CGit::CheckMsysGitDir(BOOL bFallback)
 	if (ms_bMsys2Git)
 		CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": Msys2Hack: true\n");
 
+	ms_LastMsysGitVersion = CRegDWORD(L"Software\\TortoiseGit\\git_cached_version");
+
 	// Configure libgit2 search paths
 	SetLibGit2SearchPath(GIT_CONFIG_LEVEL_SYSTEM, CTGitPath(g_Git.GetGitSystemConfig()).GetContainingDirectory().GetWinPathString());
 	SetLibGit2SearchPath(GIT_CONFIG_LEVEL_GLOBAL, g_Git.GetHomeDirectory());
-	SetLibGit2SearchPath(GIT_CONFIG_LEVEL_XDG, g_Git.GetGitGlobalXDGConfigPath());
+	SetLibGit2SearchPath(GIT_CONFIG_LEVEL_XDG, g_Git.GetGitGlobalXDGConfig(true));
 	static git_smart_subtransport_definition ssh_wintunnel_subtransport_definition = { [](git_smart_subtransport **out, git_transport* owner, void*) -> int { return git_smart_subtransport_ssh_wintunnel(out, owner, FindExecutableOnPath(g_Git.m_Environment.GetEnv(L"GIT_SSH"), g_Git.m_Environment.GetEnv(L"PATH")), g_Git.m_Environment); }, 0 };
 	git_transport_register("ssh", git_transport_smart, &ssh_wintunnel_subtransport_definition);
 	git_transport_register("ssh+git", git_transport_smart, &ssh_wintunnel_subtransport_definition);
@@ -2363,16 +2368,35 @@ CString CGit::GetGitGlobalConfig() const
 	return g_Git.GetHomeDirectory() + L"\\.gitconfig";
 }
 
-CString CGit::GetGitGlobalXDGConfigPath() const
+CString CGit::GetGitGlobalXDGConfig(bool returnDirectory) const
 {
+	// Attention: also see GitWCRev/status.cpp!
 	if (CString xdgPath = m_Environment.GetEnv(L"XDG_CONFIG_HOME"); !xdgPath.IsEmpty())
-		return xdgPath + L"\\.config\\git";
-	return g_Git.GetHomeDirectory() + L"\\.config\\git";
-}
+	{
+		xdgPath += L"\\git";
+		if (!returnDirectory)
+			xdgPath += L"\\config";
+		return xdgPath;
+	}
 
-CString CGit::GetGitGlobalXDGConfig() const
-{
-	return g_Git.GetGitGlobalXDGConfigPath() + L"\\config";
+	if (CString appData = m_Environment.GetEnv(L"APPDATA"); !appData.IsEmpty() && !ms_bCygwinGit && !ms_bMsys2Git && ms_LastMsysGitVersion >= ConvertVersionToInt(2, 46, 0))
+	{
+		appData += L"\\Git";
+		CString appDataConfigFile = appData + L"\\config";
+		if (PathFileExists(appDataConfigFile))
+		{
+			if (returnDirectory)
+				return appData;
+			return appDataConfigFile;
+		}
+	}
+
+	CString xdgInHome = g_Git.GetHomeDirectory();
+	xdgInHome += L"\\.config\\git";
+	if (returnDirectory)
+		return xdgInHome;
+
+	return xdgInHome + L"\\config";
 }
 
 CString CGit::GetGitSystemConfig() const

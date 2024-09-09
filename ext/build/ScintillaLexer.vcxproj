@@ -68,10 +68,10 @@
     <ClInclude Include="..\lexilla\lexlib\CharacterCategory.h" />
     <ClInclude Include="..\lexilla\lexlib\CharacterSet.h" />
     <ClInclude Include="..\lexilla\lexlib\DefaultLexer.h" />
+    <ClInclude Include="..\lexilla\lexlib\InList.h" />
     <ClInclude Include="..\lexilla\lexlib\LexAccessor.h" />
     <ClInclude Include="..\lexilla\lexlib\LexerBase.h" />
     <ClInclude Include="..\lexilla\lexlib\LexerModule.h" />
-    <ClInclude Include="..\lexilla\lexlib\LexerNoExceptions.h" />
     <ClInclude Include="..\lexilla\lexlib\LexerSimple.h" />
     <ClInclude Include="..\lexilla\lexlib\OptionSet.h" />
     <ClInclude Include="..\lexilla\lexlib\PropSetSimple.h" />
@@ -124,6 +124,7 @@
     <ClInclude Include="..\scintilla\src\SparseVector.h" />
     <ClInclude Include="..\scintilla\src\SplitVector.h" />
     <ClInclude Include="..\scintilla\src\Style.h" />
+    <ClInclude Include="..\scintilla\src\UndoHistory.h" />
     <ClInclude Include="..\scintilla\src\UniConversion.h" />
     <ClInclude Include="..\scintilla\src\UniqueString.h" />
     <ClInclude Include="..\scintilla\src\ViewStyle.h" />
@@ -248,6 +249,7 @@
     <ClCompile Include="..\lexilla\lexers\LexTCL.cxx" />
     <ClCompile Include="..\lexilla\lexers\LexTCMD.cxx" />
     <ClCompile Include="..\lexilla\lexers\LexTeX.cxx" />
+    <ClCompile Include="..\lexilla\lexers\LexTOML.cxx" />
     <ClCompile Include="..\lexilla\lexers\LexTxt2tags.cxx" />
     <ClCompile Include="..\lexilla\lexers\LexVB.cxx" />
     <ClCompile Include="..\lexilla\lexers\LexVerilog.cxx" />
@@ -259,10 +261,10 @@
     <ClCompile Include="..\lexilla\lexlib\CharacterCategory.cxx" />
     <ClCompile Include="..\lexilla\lexlib\CharacterSet.cxx" />
     <ClCompile Include="..\lexilla\lexlib\DefaultLexer.cxx" />
+    <ClCompile Include="..\lexilla\lexlib\InList.cxx" />
     <ClCompile Include="..\lexilla\lexlib\LexAccessor.cxx" />
     <ClCompile Include="..\lexilla\lexlib\LexerBase.cxx" />
     <ClCompile Include="..\lexilla\lexlib\LexerModule.cxx" />
-    <ClCompile Include="..\lexilla\lexlib\LexerNoExceptions.cxx" />
     <ClCompile Include="..\lexilla\lexlib\LexerSimple.cxx" />
     <ClCompile Include="..\lexilla\lexlib\PropSetSimple.cxx" />
     <ClCompile Include="..\lexilla\lexlib\StyleContext.cxx" />
@@ -296,6 +298,7 @@
     <ClCompile Include="..\scintilla\src\ScintillaBase.cxx" />
     <ClCompile Include="..\scintilla\src\Selection.cxx" />
     <ClCompile Include="..\scintilla\src\Style.cxx" />
+    <ClCompile Include="..\scintilla\src\UndoHistory.cxx" />
     <ClCompile Include="..\scintilla\src\UniConversion.cxx" />
     <ClCompile Include="..\scintilla\src\UniqueString.cxx" />
     <ClCompile Include="..\scintilla\src\ViewStyle.cxx" />

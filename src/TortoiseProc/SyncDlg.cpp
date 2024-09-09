@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2023 - TortoiseGit
+// Copyright (C) 2008-2024 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -176,8 +176,11 @@ void CSyncDlg::OnBnClickedButtonPull()
 			if (CMessageBox::Show(GetSafeHwnd(), CString(MAKEINTRESOURCE(IDS_PROC_SYNC_PULLWRONGBRANCH)), L"TortoiseGit", 2, IDI_QUESTION, tmp, CString(MAKEINTRESOURCE(IDS_ABORTBUTTON))) == 2)
 				return;
 
+			CString endOfOptions;
+			if (CGit::ms_LastMsysGitVersion >= ConvertVersionToInt(2, 43, 1))
+				endOfOptions = L" --end-of-options";
 			CString cmd;
-			cmd.Format(L"git.exe checkout %s --", static_cast<LPCWSTR>(m_strLocalBranch));
+			cmd.Format(L"git.exe checkout%s %s --", static_cast<LPCWSTR>(endOfOptions), static_cast<LPCWSTR>(m_strLocalBranch));
 
 			CProgressDlg progress(this);
 			progress.m_AutoClose = GitProgressAutoClose::AUTOCLOSE_IF_NO_ERRORS;
@@ -1131,9 +1134,7 @@ BOOL CSyncDlg::OnInitDialog()
 	this->m_ctrlPush.SetCurrentEntry(this->m_regPushButton);
 	this->m_ctrlSubmodule.SetCurrentEntry(this->m_regSubmoduleButton);
 
-	CString sWindowTitle;
-	GetWindowText(sWindowTitle);
-	CAppUtils::SetWindowTitle(m_hWnd, g_Git.m_CurrentDir, sWindowTitle);
+	CAppUtils::SetWindowTitle(*this, g_Git.m_CurrentDir);
 
 	EnableSaveRestore(L"SyncDlg");
 
@@ -1725,6 +1726,8 @@ void CSyncDlg::OnBnClickedButtonSubmodule()
 	{
 	case 0:
 		cmd = L"git.exe submodule update --init --recursive";
+		if (m_bForce)
+			cmd += L" --force";
 		break;
 	case 1:
 		cmd = L"git.exe submodule init";

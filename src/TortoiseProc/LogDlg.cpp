@@ -1,7 +1,7 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
 // Copyright (C) 2003-2009, 2015 - TortoiseSVN
-// Copyright (C) 2008-2023 - TortoiseGit
+// Copyright (C) 2008-2024 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -938,9 +938,12 @@ void CLogDlg::FillLogMessageCtrl(bool bShow /* = true*/)
 				CAppUtils::FormatTextInRichEditControl(pMsgView);
 
 			auto files = pLogEntry->GetFiles(&m_LogList); // either load the diff from disk cache and sets m_IsDiffFiles (then we safe a reload) or it enqueues it in the AsyncDiffThread
-			if (!pLogEntry->m_IsDiffFiles)
+			if (!pLogEntry->m_IsDiffFiles || pLogEntry->m_IsDiffFiles == 2)
 			{
-				m_ChangedFileListCtrl.SetBusyString(CString(MAKEINTRESOURCE(IDS_PROC_LOG_FETCHINGFILES)));
+				if (pLogEntry->m_IsDiffFiles == 2)
+					m_ChangedFileListCtrl.SetBusyString(CString(MAKEINTRESOURCE(IDS_PROC_LOG_FETCHFILESERROR)));
+				else
+					m_ChangedFileListCtrl.SetBusyString(CString(MAKEINTRESOURCE(IDS_PROC_LOG_FETCHINGFILES)));
 				m_ChangedFileListCtrl.SetBusy(TRUE);
 				m_ChangedFileListCtrl.SetRedraw(TRUE);
 				return;
@@ -1090,9 +1093,12 @@ void CLogDlg::FillPatchView(bool onlySetTimer)
 			{
 				CString cmd;
 				if (pLogEntry->m_CommitHash.IsEmpty())
-					cmd.Format(L"git.exe diff HEAD -- \"%s\"", static_cast<LPCWSTR>(p->GetGitPathString()));
+					cmd = L"git.exe diff HEAD --";
 				else
-					cmd.Format(L"git.exe diff --end-of-options %s^%d..%s -- \"%s\"", static_cast<LPCWSTR>(pLogEntry->m_CommitHash.ToString()), p->m_ParentNo + 1, static_cast<LPCWSTR>(pLogEntry->m_CommitHash.ToString()), static_cast<LPCWSTR>(p->GetGitPathString()));
+					cmd.Format(L"git.exe diff --end-of-options %s^%d..%s --", static_cast<LPCWSTR>(pLogEntry->m_CommitHash.ToString()), p->m_ParentNo + 1, static_cast<LPCWSTR>(pLogEntry->m_CommitHash.ToString()));
+				if (!p->GetGitOldPathString().IsEmpty())
+					cmd.AppendFormat(L" \"%s\"", static_cast<LPCWSTR>(p->GetGitOldPathString()));
+				cmd.AppendFormat(L" \"%s\"", static_cast<LPCWSTR>(p->GetGitPathString()));
 				g_Git.Run(cmd, &out, CP_UTF8);
 			}
 		}
@@ -1536,7 +1542,8 @@ void CLogDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 					pEdit->SetRedraw(FALSE);
 				const int oldLine = pEdit->GetFirstVisibleLine();
 					pEdit->SetSel(0, -1);
-					pEdit->Copy();
+					// manually copy text, to detach it from process (cf. issue #3909)
+					CStringUtils::WriteAsciiStringToClipboard(pEdit->GetSelText(), m_hWnd);
 					pEdit->SetSel(start, end);
 					const int newLine = pEdit->GetFirstVisibleLine();
 					pEdit->LineScroll(oldLine - newLine);
@@ -1545,7 +1552,7 @@ void CLogDlg::OnContextMenu(CWnd* pWnd, CPoint point)
 				}
 				break;
 			case WM_COPY:
-				::SendMessage(GetDlgItem(IDC_MSGVIEW)->GetSafeHwnd(), cmd, 0, -1);
+				CStringUtils::WriteAsciiStringToClipboard(pEdit->GetSelText(), m_hWnd); // manually copy text, to detach it from process (cf. issue #3909)
 				break;
 			case CGitLogList::ID_EDITNOTE:
 				CAppUtils::EditNote(GetSafeHwnd(), pRev, &m_LogList.m_ProjectProperties);
@@ -1789,6 +1796,13 @@ BOOL CLogDlg::PreTranslateMessage(MSG* pMsg)
 			GoBackForward(select, true);
 		if (HIWORD(pMsg->wParam) & (XBUTTON1 | XBUTTON2))
 			return TRUE;
+	}
+	else if (pMsg->message == WM_KEYDOWN && GetKeyState(VK_CONTROL) < 0 && (pMsg->wParam == 'C' || (pMsg->wParam == VK_INSERT && GetKeyState(VK_SHIFT) >= 0)) && GetFocus() == GetDlgItem(IDC_MSGVIEW))
+	{
+		// manually copy text, to detach it from process (cf. issue #3909)
+		auto pEdit = reinterpret_cast<CRichEditCtrl*>(GetDlgItem(IDC_MSGVIEW));
+		CStringUtils::WriteAsciiStringToClipboard(pEdit->GetSelText(), m_hWnd);
+		return TRUE;
 	}
 	if (m_hAccel && !bSkipAccelerator)
 	{

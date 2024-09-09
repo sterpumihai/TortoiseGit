@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2023 - TortoiseGit
+// Copyright (C) 2008-2024 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -195,17 +195,14 @@ BOOL CRebaseDlg::OnInitDialog()
 	}
 	m_ctrlTabCtrl.SetResizeMode(CMFCTabCtrl::RESIZE_NO);
 	// Create output panes:
-	//const DWORD dwStyle = LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL;
-	DWORD dwStyle =LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP | WS_CHILD | WS_VISIBLE;
-
-	if (! this->m_FileListCtrl.Create(dwStyle,rectDummy,&this->m_ctrlTabCtrl,0) )
+	if (!m_FileListCtrl.Create(LVS_REPORT | LVS_SHOWSELALWAYS | LVS_ALIGNLEFT | WS_BORDER | WS_TABSTOP | WS_CHILD | WS_VISIBLE, rectDummy, &this->m_ctrlTabCtrl, 0))
 	{
 		TRACE0("Failed to create output windows\n");
 		return FALSE;      // fail to create
 	}
 	m_FileListCtrl.m_hwndLogicalParent = this;
 
-	if (!m_LogMessageCtrl.Create(L"Scintilla", L"source", 0, rectDummy, &m_ctrlTabCtrl, 0, 0))
+	if (!m_LogMessageCtrl.Create(L"Scintilla", L"source", 0, rectDummy, &m_ctrlTabCtrl, 0))
 	{
 		TRACE0("Failed to create log message control");
 		return FALSE;
@@ -215,9 +212,7 @@ BOOL CRebaseDlg::OnInitDialog()
 	m_LogMessageCtrl.SetFont(CAppUtils::GetLogFontName(), CAppUtils::GetLogFontSize());
 	m_LogMessageCtrl.SetReadOnly(true);
 
-	dwStyle = LBS_NOINTEGRALHEIGHT | WS_CHILD | WS_VISIBLE | WS_HSCROLL | WS_VSCROLL;
-
-	if (!m_wndOutputRebase.Create(L"Scintilla", L"source", 0, rectDummy, &m_ctrlTabCtrl, 0, 0))
+	if (!m_wndOutputRebase.Create(L"Scintilla", L"source", 0, rectDummy, &m_ctrlTabCtrl, 0))
 	{
 		TRACE0("Failed to create output windows\n");
 		return -1;      // fail to create
@@ -253,9 +248,7 @@ BOOL CRebaseDlg::OnInitDialog()
 	m_ctrlTabCtrl.AddTab(&m_LogMessageCtrl, CString(MAKEINTRESOURCE(IDS_PROC_COMMITMESSAGE)), 1);
 	AddRebaseAnchor();
 
-	CString sWindowTitle;
-	GetWindowText(sWindowTitle);
-	CAppUtils::SetWindowTitle(m_hWnd, g_Git.m_CurrentDir, sWindowTitle);
+	CAppUtils::SetWindowTitle(*this, g_Git.m_CurrentDir);
 
 	EnableSaveRestore(L"RebaseDlg");
 
@@ -1067,24 +1060,30 @@ int CRebaseDlg::StartRebase()
 
 	if( !this->m_IsCherryPick )
 	{
+		if (g_Git.GetHash(m_OrigBranchHash, m_BranchCtrl.GetString()))
+		{
+			MessageBox(g_Git.GetGitLastErr(L"Could not get hash of \"" + m_BranchCtrl.GetString() + L"\"."), L"TortoiseGit", MB_ICONERROR);
+			return -1;
+		}
+
 		if (g_Git.m_IsUseLibGit2)
 			WriteReflog(m_OrigHEADHash, "rebase: start (" + CUnicodeUtils::GetUTF8(m_OrigHEADBranch) + " on " + CUnicodeUtils::GetUTF8(m_OrigUpstreamHash.ToString()) + ")");
 		cmd.Format(L"git.exe checkout -f %s --", static_cast<LPCWSTR>(m_OrigUpstreamHash.ToString()));
 		this->AddLogString(cmd);
 		if (RunGitCmdRetryOrAbort(cmd))
 			return -1;
+		if (!g_Git.CheckCleanWorkTree())
+		{
+			// this situation may occur when text transformations are performed and a file in Git history is not in the normalized format
+			AddLogString(L"Unrecoverable error: Working tree is not clean after checkout.");
+			m_RebaseStage = RebaseStage::Error;
+			return -1;
+		}
 	}
 
 	CString log;
 	if( !this->m_IsCherryPick )
-	{
-		if (g_Git.GetHash(m_OrigBranchHash, m_BranchCtrl.GetString()))
-		{
-			MessageBox(g_Git.GetGitLastErr(L"Could not get hash of \"" + m_BranchCtrl.GetString() + L"\"."), L"TortoiseGit", MB_ICONERROR);
-			return -1;
-		}
 		log.Format(L"%s\r\n", static_cast<LPCWSTR>(CString(MAKEINTRESOURCE(IDS_PROC_REBASE_STARTREBASE))));
-	}
 	else
 		log.Format(L"%s\r\n", static_cast<LPCWSTR>(CString(MAKEINTRESOURCE(IDS_PROC_REBASE_STARTCHERRYPICK))));
 
@@ -1267,7 +1266,10 @@ void CRebaseDlg::OnBnClickedContinue()
 
 		if (g_Git.IsLocalBranch(m_BranchCtrl.GetString()))
 		{
-			cmd.Format(L"git.exe checkout --no-track -f -B %s %s --", static_cast<LPCWSTR>(m_BranchCtrl.GetString()), static_cast<LPCWSTR>(m_UpstreamCtrl.GetString()));
+			CString endOfOptions;
+			if (CGit::ms_LastMsysGitVersion >= ConvertVersionToInt(2, 43, 1))
+				endOfOptions = L" --end-of-options";
+			cmd.Format(L"git.exe checkout --no-track -f -B %s%s %s --", static_cast<LPCWSTR>(m_BranchCtrl.GetString()), static_cast<LPCWSTR>(endOfOptions), static_cast<LPCWSTR>(m_UpstreamCtrl.GetString()));
 			AddLogString(cmd);
 			if (RunGitCmdRetryOrAbort(cmd))
 			{
@@ -1277,7 +1279,11 @@ void CRebaseDlg::OnBnClickedContinue()
 			AddLogString(out);
 			out.Empty();
 		}
-		cmd.Format(L"git.exe reset --hard %s --", static_cast<LPCWSTR>(g_Git.FixBranchName(this->m_UpstreamCtrl.GetString())));
+
+		CString endOfOptions;
+		if (CGit::ms_LastMsysGitVersion >= ConvertVersionToInt(2, 43, 1))
+			endOfOptions = L" --end-of-options";
+		cmd.Format(L"git.exe reset --hard%s %s --", static_cast<LPCWSTR>(endOfOptions), static_cast<LPCWSTR>(g_Git.FixBranchName(this->m_UpstreamCtrl.GetString())));
 		CString log;
 		log.Format(IDS_PROC_REBASE_FFTO, static_cast<LPCWSTR>(m_UpstreamCtrl.GetString()));
 		this->AddLogString(log);
@@ -1660,8 +1666,16 @@ void CRebaseDlg::OnBnClickedContinue()
 		}
 
 		AddLogString(out);
-		if (CheckNextCommitIsSquash() == 0 && m_RebaseStage != RebaseStage::Squash_Edit) // remember commit msg after edit if next commit if squash; but don't do this if ...->squash(reset here)->pick->squash
+		const bool nextIsSquash = CheckNextCommitIsSquash() == 0;
+		if (nextIsSquash) // remember commit msg after edit if next commit if squash; but don't do this if ...->squash(reset here)->pick->squash
 		{
+			GitRev latest;
+			if (latest.GetCommit(L"HEAD"))
+			{
+				MessageBox(L"Could not get HEAD commit:" + latest.GetLastErr(), L"TortoiseGit", MB_ICONERROR);
+				return;
+			}
+			m_SquashFirstMetaData = SquashFirstMetaData(&latest);
 			ResetParentForSquash(str);
 		}
 		else
@@ -1677,7 +1691,8 @@ void CRebaseDlg::OnBnClickedContinue()
 		m_rewrittenCommitsMap[curRev->m_CommitHash] = head; // we had a reset to parent, so this is not the correct hash
 		for (const auto& hash : m_forRewrite)
 			m_rewrittenCommitsMap[hash] = head;
-		m_forRewrite.clear();
+		if (!nextIsSquash)
+			m_forRewrite.clear();
 		curRev->GetRebaseAction() |= CGitLogListBase::LOGACTIONS_REBASE_DONE;
 		this->UpdateCurrentStatus();
 	}
@@ -2161,7 +2176,7 @@ int CRebaseDlg::DoRebase()
 					CString parentString;
 					for (const auto& parent : newParents)
 						parentString += L' ' + parent.ToString();
-					cmd.Format(L"git.exe checkout %s", static_cast<LPCWSTR>(newParents[0].ToString()));
+					cmd.Format(L"git.exe checkout %s --", static_cast<LPCWSTR>(newParents[0].ToString()));
 					if (RunGitCmdRetryOrAbort(cmd))
 					{
 						m_RebaseStage = RebaseStage::Error;
