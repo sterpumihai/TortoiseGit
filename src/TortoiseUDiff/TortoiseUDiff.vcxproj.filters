@@ -134,9 +134,6 @@
     <ClInclude Include="..\Utils\PathUtils.h">
       <Filter>Utils</Filter>
     </ClInclude>
-    <ClInclude Include="..\Utils\I18NHelper.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\Utils\DarkModeHelper.h">
       <Filter>Utils</Filter>
     </ClInclude>

@@ -20,15 +20,15 @@
 #include "stdafx.h"
 #include "LangDll.h"
 #include "../version.h"
-#include "I18NHelper.h"
 #include "PathUtils.h"
 #include "registry.h"
 #include "CrashReport.h"
 #include <format>
-#if defined(TORTOISEGITPROC)
 #include "StringUtils.h"
+#if defined(TORTOISEGITPROC)
 #include "DirFileEnum.h"
 #endif
+#include "../../ext/simpleini/SimpleIni.h"
 
 HINSTANCE CLangDll::Init(LPCWSTR appname)
 {
@@ -44,13 +44,15 @@ HINSTANCE CLangDll::Init(LPCWSTR appname, HMODULE hModule, DWORD langID)
 		return nullptr;
 
 	wchar_t langpath[MAX_PATH]{};
-	const std::wstring sVer{ TEXT(STRPRODUCTVER) };
 	GetModuleFileName(hModule, langpath, _countof(langpath));
 	wchar_t* pSlash = wcsrchr(langpath, L'\\');
 	if (!pSlash)
 		return nullptr;
 
 	*pSlash = '\0';
+
+	const std::wstring sVer{ GetCompatibleDLLVersion(langpath) };
+
 	pSlash = wcsrchr(langpath, L'\\');
 	if (!pSlash)
 		return nullptr;
@@ -60,7 +62,7 @@ HINSTANCE CLangDll::Init(LPCWSTR appname, HMODULE hModule, DWORD langID)
 	do
 	{
 		const std::wstring langdllpath = std::format(L"{}{}{}{}.dll", langpath, s_languagesfolder, appname, langID);
-		if (CI18NHelper::DoVersionStringsMatch(CPathUtils::GetVersionFromFile(langdllpath.data()), sVer))
+		if (CPathUtils::GetVersionFromFile(langdllpath.data()) == sVer)
 		{
 			if (hModule)
 				m_hInstance = ::LoadLibraryEx(langdllpath.data(), nullptr, LOAD_LIBRARY_AS_DATAFILE_EXCLUSIVE | LOAD_LIBRARY_AS_IMAGE_RESOURCE);
@@ -97,8 +99,8 @@ std::vector<std::pair<CString, DWORD>> CLangDll::GetInstalledLanguages(bool incl
 		GetLocaleInfo(CLangDll::s_defaultLang, LOCALE_SNATIVELANGNAME, buf, _countof(buf));
 		langs.emplace_back(std::make_pair<>(buf, CLangDll::s_defaultLang));
 	}
+	const std::wstring sVer{ GetCompatibleDLLVersion(CPathUtils::GetAppDirectory().GetString()) };
 	CString path = CPathUtils::GetAppParentDirectory();
-	const std::wstring sVer{ TEXT(STRPRODUCTVER) };
 	path += s_languagesfolder.data();
 	CSimpleFileFind finder(path, L"*.dll");
 	while (finder.FindNextFileNoDirectories())
@@ -108,7 +110,7 @@ std::vector<std::pair<CString, DWORD>> CLangDll::GetInstalledLanguages(bool incl
 			continue;
 
 		CString file = finder.GetFilePath();
-		if (checkVersion && !CI18NHelper::DoVersionStringsMatch(CPathUtils::GetVersionFromFile(file), sVer))
+		if (checkVersion && CPathUtils::GetVersionFromFile(file) != sVer)
 			continue;
 		CString sLoc = filename.Mid(static_cast<int>(wcslen(L"TortoiseProc")));
 		sLoc = sLoc.Left(sLoc.GetLength() - static_cast<int>(wcslen(L".dll"))); // cut off ".dll"
@@ -131,3 +133,19 @@ std::vector<std::pair<CString, DWORD>> CLangDll::GetInstalledLanguages(bool incl
 	return langs;
 }
 #endif
+
+std::wstring CLangDll::GetCompatibleDLLVersion(const std::wstring& appPath)
+{
+	CSimpleIni hotfixIniFile;
+	if (hotfixIniFile.LoadFile((appPath + L"\\hotfix.ini").data()) == SI_OK)
+	{
+		if (auto langpackversion = hotfixIniFile.GetValue(L"tortoisegit", L"versionstringlanguagepacks"); langpackversion)
+		{
+			std::vector<int> versionComponents;
+			stringtok(versionComponents, std::wstring(langpackversion), false, L".");
+			if (versionComponents.size() == 4 && versionComponents.at(0) == TGIT_VERMAJOR && versionComponents.at(1) == TGIT_VERMINOR && versionComponents.at(2) <= TGIT_VERMICRO)
+				return langpackversion;
+		}
+	}
+	return TEXT(STRPRODUCTVER);
+}

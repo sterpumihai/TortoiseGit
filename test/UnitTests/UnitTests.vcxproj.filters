@@ -182,9 +182,6 @@
     <ClInclude Include="..\..\src\Git\GitMailmap.h">
       <Filter>Git</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Utils\I18NHelper.h">
-      <Filter>Utils</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\Utils\MiscUI\IconBitmapUtils.h">
       <Filter>Utils\UI</Filter>
     </ClInclude>
@@ -402,9 +399,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\Git\GitMailmap.cpp">
       <Filter>Git</Filter>
-    </ClCompile>
-    <ClCompile Include="I18NHelperTest.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UnicodeUtilsTest.cpp">
       <Filter>Source Files</Filter>

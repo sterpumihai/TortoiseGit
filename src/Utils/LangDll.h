@@ -44,6 +44,8 @@ public:
 	static std::vector<std::pair<CString, DWORD>> GetInstalledLanguages(bool includeNative = false, bool checkVersion = true);
 #endif
 
+	static std::wstring GetCompatibleDLLVersion(const std::wstring& appPath);
+
 private:
 	CAutoLibrary	m_hInstance;
 	DWORD			m_langId = s_defaultLang;

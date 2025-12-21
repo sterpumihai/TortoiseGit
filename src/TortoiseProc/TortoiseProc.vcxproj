@@ -388,7 +388,6 @@
     <ClInclude Include="..\Utils\Hash.h" />
     <ClInclude Include="..\Utils\Hooks.h" />
     <ClInclude Include="..\Utils\HwSMTP.h" />
-    <ClInclude Include="..\Utils\I18NHelper.h" />
     <ClInclude Include="..\Utils\IconExtractor.h" />
     <ClInclude Include="..\Utils\IInputValidator.h" />
     <ClInclude Include="..\Utils\JumpListHelpers.h" />
