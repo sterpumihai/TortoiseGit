@@ -1,7 +1,7 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
 // External Cache Copyright (C) 2005-2008,2011,2014 - TortoiseSVN
-// Copyright (C) 2008-2014, 2016-2019, 2021, 2023, 2025 - TortoiseGit
+// Copyright (C) 2008-2014, 2016-2019, 2021, 2023, 2025-2026 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -131,8 +131,6 @@ void CFolderCrawler::WorkerThread()
 
 	for(;;)
 	{
-		const bool bRecursive = !!static_cast<DWORD>(CRegStdDWORD(L"Software\\TortoiseGit\\RecursiveOverlay", TRUE));
-
 		SetThreadPriority(GetCurrentThread(), THREAD_MODE_BACKGROUND_END);
 
 		const DWORD waitResult = WaitForMultipleObjects(_countof(hWaitHandles), hWaitHandles, FALSE, INFINITE);
@@ -293,7 +291,7 @@ void CFolderCrawler::WorkerThread()
 							pCachedDir->Invalidate();
 							if (workingPath.Exists())
 							{
-								pCachedDir->RefreshStatus(bRecursive);
+								pCachedDir->RefreshStatus(false); // This crawl is due to DirectoyWatcher, non-recursive is enough.
 								// if the previous status wasn't normal and now it is, then
 								// send a notification too.
 								// We do this here because GetCurrentFullStatus() doesn't send
@@ -346,8 +344,8 @@ void CFolderCrawler::WorkerThread()
 						CCachedDirectory* cachedDir = CGitStatusCache::Instance().GetDirectoryCacheEntry(workingPath.GetDirectory());
 						if (cachedDir && workingPath.IsDirectory())
 							cachedDir->Invalidate();
-						if (cachedDir && cachedDir->GetStatusForMember(workingPath, bRecursive).GetEffectiveStatus() > git_wc_status_unversioned)
-							CGitStatusCache::Instance().UpdateShell(workingPath);
+						if (cachedDir)
+							cachedDir->GetStatusForMember(workingPath, false); // This crawl is due to DirectoyWatcher, non-recursive is enough.
 					}
 					AutoLocker lock(m_critSec);
 					m_pathsToUpdate.erase(workingPath);
@@ -421,7 +419,7 @@ void CFolderCrawler::WorkerThread()
 						}
 					}
 					if (cachedDir)
-						cachedDir->RefreshStatus(bRecursive);
+						cachedDir->RefreshStatus(true); // crawling is always done recursively
 				}
 
 				// While refreshing the status, we could get another crawl request for the same folder.
