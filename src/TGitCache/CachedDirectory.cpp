@@ -344,7 +344,25 @@ CStatusCacheEntry CCachedDirectory::GetStatusForMember(const CTGitPath& path, bo
 				CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": %s is not underversion control\n", path.GetWinPath());
 				return CStatusCacheEntry();
 			}
+			if (!bRequestForSelf && !IsOwnStatusValid())
+			{
+				// Update folder status if it's invalid and member status is requested.
+				// Otherwise the ignore shortcut path won't be triggered for newly created ignored folders.
+				GetStatusFromGit(m_directoryPath, sProjectRoot, true, bRecursive);
+			}
+			if (m_ownStatus.GetEffectiveStatus() == git_wc_status_ignored)
+			{
+				// shortcut if path is ignored
+				CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": %s return fast ignored status\n", path.GetWinPath());
+				if (bRequestForSelf)
+					m_ownStatus = git_wc_status_ignored; // validate
+				UpdateCurrentStatus();
 
+				// Check status is still ignored
+				if (m_ownStatus.GetEffectiveStatus() == git_wc_status_ignored)
+					return CStatusCacheEntry(git_wc_status_ignored);
+				CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": %s return fast ignored status failed!\n", path.GetWinPath());
+			}
 		}
 		if (!bRequestForSelf && path.IsDirectory() && !path.HasAdminDir(&sProjectRoot))
 		{
@@ -515,6 +533,11 @@ BOOL CCachedDirectory::GetStatusCallback(const CString& path, const git_wc_statu
 						// is blocked in that case and doesn't cause a crawl)
 						if (!dirEntry || dirEntry->m_ownStatus.GetEffectiveStatus() == pGitStatus->status)
 							crawl = false;
+					}
+					if (crawl && dirEntry && dirEntry->m_ownStatus.GetEffectiveStatus() == git_wc_status_ignored && pGitStatus->status != git_wc_status_ignored)
+					{
+						// subfolder is not longer ignored. Reset status so the fast ignore path is skipped during crawling.
+						dirEntry->m_ownStatus = git_wc_status_none;
 					}
 					if (crawl)
 						CGitStatusCache::Instance().AddFolderForCrawling(gitPath);
