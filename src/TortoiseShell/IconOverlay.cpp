@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2009-2013, 2015-2020, 2025 - TortoiseGit
+// Copyright (C) 2009-2013, 2015-2020, 2025-2026 - TortoiseGit
 // Copyright (C) 2003-2008, 2017 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -205,13 +205,8 @@ STDMETHODIMP CShellExt::IsMemberOf(LPCWSTR pwszPath, DWORD /*dwAttrib*/)
 					{
 						if (g_ShellCache.HasGITAdminDir(pPath, TRUE))
 						{
-							if ((!g_ShellCache.IsRecursive()) && (!g_ShellCache.IsFolderOverlay()))
-								status = git_wc_status_normal;
-							else
-							{
-								s = m_CachedStatus.GetFullStatus(CTGitPath(pPath), TRUE);
-								status = s->status;
-							}
+							s = m_CachedStatus.GetFullStatus(CTGitPath(pPath), TRUE);
+							status = s->status;
 						}
 						else
 							status = git_wc_status_none;
