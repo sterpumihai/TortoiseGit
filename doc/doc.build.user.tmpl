@@ -34,8 +34,4 @@
 		value="${string::replace(path::get-full-path('c:/Tools/xsl'), '\', '/')}"
 		unless="${property::exists('path.xsl')}"
 	/>
-	<property name="path.gettext"
-		value="${path::get-full-path('c:/Tools')}"
-		unless="${property::exists('path.gettext')}"
-	/>
 </project>
