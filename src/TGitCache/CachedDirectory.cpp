@@ -256,7 +256,7 @@ CStatusCacheEntry CCachedDirectory::GetStatusFromCache(const CTGitPath& path, bo
 	}
 }
 
-CStatusCacheEntry CCachedDirectory::GetStatusFromGit(const CTGitPath &path, const CString& sProjectRoot, bool isSelf)
+CStatusCacheEntry CCachedDirectory::GetStatusFromGit(const CTGitPath &path, const CString& sProjectRoot, bool isSelf, bool bRecursive)
 {
 	CString subpaths;
 	CString s = path.GetGitPathString();
@@ -271,6 +271,7 @@ CStatusCacheEntry CCachedDirectory::GetStatusFromGit(const CTGitPath &path, cons
 	GitStatus *pGitStatus = &CGitStatusCache::Instance().m_GitStatus;
 	UNREFERENCED_PARAMETER(pGitStatus);
 
+	m_bRecursive = bRecursive;
 	if (EnumFiles(path, sProjectRoot, subpaths, isSelf))
 	{
 		// there was an error
@@ -332,15 +333,36 @@ CStatusCacheEntry CCachedDirectory::GetStatusForMember(const CTGitPath& path, bo
 				// shortcut if path is not versioned
 				m_ownStatus = git_wc_status_none;
 				m_mostImportantFileStatus = git_wc_status_none;
-				for (auto it = m_childDirectories.cbegin(); it != m_childDirectories.cend(); ++it)
-					CGitStatusCache::Instance().AddFolderForCrawling(it->first);
+				if (bRecursive)
+				{
+					for (auto it = m_childDirectories.cbegin(); it != m_childDirectories.cend(); ++it)
+						CGitStatusCache::Instance().AddFolderForCrawling(it->first);
+				}
 				m_childDirectories.clear();
 				m_entryCache.clear();
 				UpdateCurrentStatus();
 				CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": %s is not underversion control\n", path.GetWinPath());
 				return CStatusCacheEntry();
 			}
+			if (!bRequestForSelf && !IsOwnStatusValid())
+			{
+				// Update folder status if it's invalid and member status is requested.
+				// Otherwise the ignore shortcut path won't be triggered for newly created ignored folders.
+				GetStatusFromGit(m_directoryPath, sProjectRoot, true, bRecursive);
+			}
+			if (m_ownStatus.GetEffectiveStatus() == git_wc_status_ignored)
+			{
+				// shortcut if path is ignored
+				CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": %s return fast ignored status\n", path.GetWinPath());
+				if (bRequestForSelf)
+					m_ownStatus = git_wc_status_ignored; // validate
+				UpdateCurrentStatus();
 
+				// Check status is still ignored
+				if (m_ownStatus.GetEffectiveStatus() == git_wc_status_ignored)
+					return CStatusCacheEntry(git_wc_status_ignored);
+				CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": %s return fast ignored status failed!\n", path.GetWinPath());
+			}
 		}
 		if (!bRequestForSelf && path.IsDirectory() && !path.HasAdminDir(&sProjectRoot))
 		{
@@ -348,7 +370,7 @@ CStatusCacheEntry CCachedDirectory::GetStatusForMember(const CTGitPath& path, bo
 			return CStatusCacheEntry();
 		}
 
-		return GetStatusFromGit(path, sProjectRoot, bRequestForSelf);
+		return GetStatusFromGit(path, sProjectRoot, bRequestForSelf, bRecursive);
 	}
 	else
 	{
@@ -486,10 +508,38 @@ BOOL CCachedDirectory::GetStatusCallback(const CString& path, const git_wc_statu
 			ATLASSERT(!gitPath.IsEquivalentToWithoutCase(pThis->m_directoryPath)); // this method does not get called four ourself
 			//if ( !gitPath.IsEquivalentToWithoutCase(pThis->m_directoryPath) )
 			{
-				if (pThis->m_bRecursive)
+				// Add any versioned directory, which is not our 'self' entry, to the list for having its status updated
+				if (pGitStatus->status >= git_wc_status_unversioned)
 				{
-					// Add any versioned directory, which is not our 'self' entry, to the list for having its status updated
-					if (pGitStatus->status >= git_wc_status_normal || (CGitStatusCache::Instance().IsUnversionedAsModified() && pGitStatus->status == git_wc_status_unversioned))
+					// We don't want to do a crawl when m_bRecursive is false. m_bRecursive is false when this call is issued by
+					// the directory watcher. In that case just this folder has a change, and not the subfolders (if any of them get
+					// changed, they get notified separately).
+					// If we were to crawl recursively, creating/deleting a file in a directory
+					// would cause crawling of all subfolders.
+					bool crawl = pThis->m_bRecursive;
+
+					// Force a crawl if the cache is no longer valid (this shouldn't really happen, just to be safe)
+					CCachedDirectory * dirEntry = CGitStatusCache::Instance().GetDirectoryCacheEntryNoCreate(gitPath);
+					if(!dirEntry || !dirEntry->IsOwnStatusValid())
+						crawl = true;
+
+					// If current status is ignored we skip crawling for performance.
+					// Also if current status is unversioned (unless overridden in settings).
+					if (pGitStatus->status == git_wc_status_ignored ||
+						(pGitStatus->status == git_wc_status_unversioned && !CGitStatusCache::Instance().IsUnversionedAsModified()))
+					{
+						// Except in the case that we already have a cache and its status doesn't match.
+						// That can happen when a normal folder becomes ignored due to a checkout (the directory watcher
+						// is blocked in that case and doesn't cause a crawl)
+						if (!dirEntry || dirEntry->m_ownStatus.GetEffectiveStatus() == pGitStatus->status)
+							crawl = false;
+					}
+					if (crawl && dirEntry && dirEntry->m_ownStatus.GetEffectiveStatus() == git_wc_status_ignored && pGitStatus->status != git_wc_status_ignored)
+					{
+						// subfolder is not longer ignored. Reset status so the fast ignore path is skipped during crawling.
+						dirEntry->m_ownStatus = git_wc_status_none;
+					}
+					if (crawl)
 						CGitStatusCache::Instance().AddFolderForCrawling(gitPath);
 				}
 
