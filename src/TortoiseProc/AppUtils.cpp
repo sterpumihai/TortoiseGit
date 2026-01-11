@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2025 - TortoiseGit
+// Copyright (C) 2008-2026 - TortoiseGit
 // Copyright (C) 2003-2011, 2013-2014 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -1262,6 +1262,19 @@ bool CAppUtils::CreateWorktree(HWND hWnd, const CString& target /* CString() */)
 
 	CProgressDlg progress(GetParentCWnd(hWnd));
 	progress.m_GitCmd = cmd;
+	progress.m_PostCmdCallback = [&](DWORD status, PostCmdList& postCmdList) {
+		if (status)
+			return;
+
+		if (CTGitPath path(dlg.m_sWorktreePath); path.HasSubmodules())
+		{
+			postCmdList.emplace_back(IDI_UPDATE, IDS_PROC_SUBMODULESUPDATE, [&] {
+				CString sCmd;
+				sCmd.Format(L"/command:subupdate /bkpath:\"%s\"", static_cast<LPCWSTR>(dlg.m_sWorktreePath));
+				CAppUtils::RunTortoiseGitProc(sCmd);
+			});
+		}
+	};
 
 	return progress.DoModal() == IDOK;
 }
