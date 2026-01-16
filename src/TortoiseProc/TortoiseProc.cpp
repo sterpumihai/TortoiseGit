@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2025 - TortoiseGit
+// Copyright (C) 2008-2026 - TortoiseGit
 // Copyright (C) 2003-2008, 2012-2014 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -221,7 +221,7 @@ BOOL CTortoiseProcApp::InitInstance()
 			if (versionparser.Load(hotfix, err))
 			{
 				auto version = versionparser.GetTortoiseGitVersion();
-				if (version.major == TGIT_VERMAJOR && version.minor == TGIT_VERMINOR && version.micro == TGIT_VERMICRO && version.build > TGIT_VERBUILD)
+				if (version.major == TGIT_VERMAJOR && version.minor == TGIT_VERMINOR && (version.micro > TGIT_VERMICRO || version.micro == TGIT_VERMICRO && version.build > TGIT_VERBUILD))
 				{
 					CCrashReport::Instance().AddUserInfoToReport(L"Hotfix", versionparser.GetTortoiseGitVersion().version);
 					CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": Hotfix: %s\n", static_cast<LPCWSTR>(versionparser.GetTortoiseGitVersion().version));

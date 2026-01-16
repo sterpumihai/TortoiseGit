@@ -1,7 +1,7 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
 // Copyright (C) 2003-2008 - TortoiseSVN
-// Copyright (C) 2009-2021, 2023-2025 - TortoiseGit
+// Copyright (C) 2009-2021, 2023-2026 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -107,7 +107,7 @@ BOOL CAboutDlg::OnInitDialog()
 		if (parser.Load(hotfix, err))
 		{
 			auto version = parser.GetTortoiseGitVersion();
-			if (version.major == TGIT_VERMAJOR && version.minor == TGIT_VERMINOR && version.micro == TGIT_VERMICRO && version.build > TGIT_VERBUILD)
+			if (version.major == TGIT_VERMAJOR && version.minor == TGIT_VERMINOR && (version.micro > TGIT_VERMICRO || version.micro == TGIT_VERMICRO && version.build > TGIT_VERBUILD))
 				additionalVersionInformation = L"Hotfix " + parser.GetTortoiseGitVersion().version;
 		}
 	}
