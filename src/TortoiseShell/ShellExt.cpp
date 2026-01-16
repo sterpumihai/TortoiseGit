@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2011-2023, 2025 - TortoiseGit
+// Copyright (C) 2011-2023, 2025-2026 - TortoiseGit
 // Copyright (C) 2003-2014 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -145,20 +145,20 @@ STDMETHODIMP CShellExt::Load(LPCOLESTR /*pszFileName*/, DWORD /*dwMode*/)
 }
 
 // ICopyHook member
-UINT __stdcall CShellExt::CopyCallback(HWND /*hWnd*/, UINT wFunc, UINT /*wFlags*/, LPCWSTR pszSrcFile, DWORD /*dwSrcAttribs*/, LPCWSTR /*pszDestFile*/, DWORD /*dwDestAttribs*/)
+UINT __stdcall CShellExt::CopyCallback(HWND /*hWnd*/, UINT wFunc, UINT /*wFlags*/, LPCWSTR pszSrcFile, DWORD dwSrcAttribs, LPCWSTR /*pszDestFile*/, DWORD /*dwDestAttribs*/)
 {
 	switch (wFunc)
 	{
 	case FO_MOVE:
 	case FO_DELETE:
 	case FO_RENAME:
-		if (pszSrcFile && pszSrcFile[0] && g_ShellCache.IsPathAllowed(pszSrcFile))
+		if (pszSrcFile && (dwSrcAttribs & FILE_ATTRIBUTE_DIRECTORY) && g_ShellCache.IsPathAllowed(pszSrcFile))
 		{
 			const auto cacheType = g_ShellCache.GetCacheType();
 			switch (cacheType)
 			{
 			case ShellCache::exe:
-				m_remoteCacheLink.ReleaseLockForPath(CTGitPath(pszSrcFile));
+				m_remoteCacheLink.ReleaseLockForPath(CTGitPath(pszSrcFile, true));
 				break;
 			case ShellCache::dll:
 			case ShellCache::dllFull:
