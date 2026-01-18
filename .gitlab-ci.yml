@@ -22,6 +22,7 @@ doc:
       - doc/doc.build*
       - doc/Aspell/*
       - doc/scripts/**
+      - doc/CheckIDD.sh
       - src/TortoiseMege/resource.h
       - src/TortoiseProc/resource.h
       - src/Resources/*.rc
