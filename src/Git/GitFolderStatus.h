@@ -1,6 +1,6 @@
-// TortoiseGit - a Windows shell extension for easy version control
+﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2012, 2014, 2016-2017, 2021-2023 - TortoiseGit
+// Copyright (C) 2008-2012, 2014, 2016-2017, 2021-2023, 2026 - TortoiseGit
 // Copyright (C) 2003-2006,2008,2011 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -54,6 +54,11 @@ class GitFolderStatus
 public:
 	GitFolderStatus();
 	~GitFolderStatus();
+
+	// prevent cloning
+	GitFolderStatus(const GitFolderStatus&) = delete;
+	GitFolderStatus& operator=(const GitFolderStatus&) = delete;
+
 	const FileStatusCacheEntry *	GetFullStatus(const CTGitPath& filepath, BOOL bIsFolder);
 	const FileStatusCacheEntry *	GetCachedItem(const CTGitPath& filepath);
 

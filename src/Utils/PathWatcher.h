@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2023 - TortoiseGit
+// Copyright (C) 2023, 2026 - TortoiseGit
 // External Cache Copyright (C) 2007-2008, 2012 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -42,6 +42,10 @@ class CPathWatcher
 public:
 	CPathWatcher();
 	~CPathWatcher();
+
+	// prevent cloning
+	CPathWatcher(const CPathWatcher&) = delete;
+	CPathWatcher& operator=(const CPathWatcher&) = delete;
 
 	/**
 	 * Adds a new path to be watched. The path \b must point to a directory.

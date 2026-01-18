@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2009, 2011, 2014, 2017, 2019, 2023, 2025 - TortoiseGit
+// Copyright (C) 2009, 2011, 2014, 2017, 2019, 2023, 2025-2026 - TortoiseGit
 // Copyright (C) 2003-2011, 2014, 2017 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -33,6 +33,10 @@ class CRemoteCacheLink
 public:
 	CRemoteCacheLink();
 	~CRemoteCacheLink();
+
+	// prevent cloning
+	CRemoteCacheLink(const CRemoteCacheLink&) = delete;
+	CRemoteCacheLink& operator=(const CRemoteCacheLink&) = delete;
 
 public:
 	bool GetStatusFromRemoteCache(const CTGitPath& Path, TGITCacheResponse* pReturnedStatus, bool bRecursive);

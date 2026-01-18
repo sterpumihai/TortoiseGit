@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2018, 2023, 2025 - TortoiseGit
+// Copyright (C) 2008-2018, 2023, 2025-2026 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -82,6 +82,10 @@ public:
 	static bool ReleasePathsRecursively(const CString &rootpath);
 
 	GitStatus();
+
+	// prevent cloning
+	GitStatus(const GitStatus&) = delete;
+	GitStatus& operator=(const GitStatus&) = delete;
 
 	/**
 	 * Reads the git status of the working copy entry. No

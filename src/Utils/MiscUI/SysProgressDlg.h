@@ -1,6 +1,6 @@
-// TortoiseGit - a Windows shell extension for easy version control
+﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2009, 2011-2012, 2016-2017, 2021, 2023 - TortoiseGit
+// Copyright (C) 2009, 2011-2012, 2016-2017, 2021, 2023, 2026 - TortoiseGit
 // Copyright (C) 2003-2011, 2015 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -33,6 +33,10 @@ class CSysProgressDlg
 public:
 	CSysProgressDlg();
 	~CSysProgressDlg();
+
+	// prevent cloning
+	CSysProgressDlg(const CSysProgressDlg&) = delete;
+	CSysProgressDlg& operator=(const CSysProgressDlg&) = delete;
 
 	/**
 	 * sets the title of the progress dialog box.

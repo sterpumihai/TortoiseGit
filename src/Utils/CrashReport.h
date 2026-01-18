@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2013, 2016, 2019, 2023 - TortoiseGit
+// Copyright (C) 2013, 2016, 2019, 2023, 2026 - TortoiseGit
 // Copyright (C) 2012-2014 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -62,6 +62,10 @@ private:
 		if (m_bSkipAssertsAdded)
 			RemoveVectoredExceptionHandler(SkipAsserts);
 	}
+
+	// prevent cloning
+	CCrashReport(const CCrashReport&) = delete;
+	CCrashReport& operator=(const CCrashReport&) = delete;
 
 public:
 	static CCrashReport&    Instance()

@@ -1,6 +1,6 @@
 // TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2023 - TortoiseGit
+// Copyright (C) 2023, 2026 - TortoiseGit
 // Copyright (C) 2003-2006 - Stefan Kueng
 
 // This program is free software; you can redistribute it and/or
@@ -35,6 +35,10 @@ protected:
 public:
 	CShellExtClassFactory(FileState state);
 	virtual ~CShellExtClassFactory();
+
+	// prevent cloning
+	CShellExtClassFactory(const CShellExtClassFactory&) = delete;
+	CShellExtClassFactory& operator=(const CShellExtClassFactory&) = delete;
 
 	//@{
 	/// IUnknown members

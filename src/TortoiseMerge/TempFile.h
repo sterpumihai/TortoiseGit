@@ -1,5 +1,6 @@
 ﻿// TortoiseGitMerge - a Windows shell extension for easy version control
 
+// Copyright (C) 2026 - TortoiseGit
 // Copyright (C) 2003-2006,2008,2010 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -76,4 +77,8 @@ private:
 
 	CTempFiles();
 	~CTempFiles();
+
+	// prevent cloning
+	CTempFiles(const CTempFiles&) = delete;
+	CTempFiles& operator=(const CTempFiles&) = delete;
 };

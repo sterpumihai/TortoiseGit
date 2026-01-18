@@ -1,7 +1,7 @@
-// TortoiseGit - a Windows shell extension for easy version control
+﻿// TortoiseGit - a Windows shell extension for easy version control
 
 // External Cache Copyright (C) 2005 - 2006,2010, 2014 - TortoiseSVN
-// Copyright (C) 2008-2011, 2017-2018, 2023 - TortoiseGit
+// Copyright (C) 2008-2011, 2017-2018, 2023, 2026 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -40,6 +40,10 @@ class CGitStatusCache
 private:
 	CGitStatusCache();
 	~CGitStatusCache();
+
+	// prevent cloning
+	CGitStatusCache(const CGitStatusCache&) = delete;
+	CGitStatusCache& operator=(const CGitStatusCache&) = delete;
 
 public:
 	static CGitStatusCache& Instance();

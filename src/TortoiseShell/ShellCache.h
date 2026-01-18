@@ -59,6 +59,10 @@ public:
 	ShellCache();
 	~ShellCache();
 
+	// prevent cloning
+	ShellCache(const ShellCache&) = delete;
+	void operator=(const ShellCache&) = delete;
+
 	bool RefreshIfNeeded();
 
 	CacheType GetCacheType();

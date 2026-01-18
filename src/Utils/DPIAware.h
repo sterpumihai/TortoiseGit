@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2018-2020, 2023 - TortoiseGit
+// Copyright (C) 2018-2020, 2023, 2026 - TortoiseGit
 // Copyright (C) 2018, 2020 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -25,6 +25,10 @@ class CDPIAware
 private:
 	CDPIAware() = default;
 	~CDPIAware() = default;
+
+	// prevent cloning
+	CDPIAware(const CDPIAware&) = delete;
+	CDPIAware& operator=(const CDPIAware&) = delete;
 
 public:
 	static CDPIAware&   Instance()
