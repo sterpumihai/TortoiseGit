@@ -158,8 +158,17 @@ UINT __stdcall CShellExt::CopyCallback(HWND /*hWnd*/, UINT wFunc, UINT /*wFlags*
 			switch (cacheType)
 			{
 			case ShellCache::exe:
+			{
+				thread_local static std::wstring shortcut = L"::*-"; // initialize with an invalid path
+				if (wcsncmp(shortcut.c_str(), pszSrcFile, shortcut.size()) == 0)
+					break;
+				shortcut = pszSrcFile;
+				if (!shortcut.empty() && shortcut.back() != L'\\')
+					shortcut += L'\\';
+
 				m_remoteCacheLink.ReleaseLockForPath(CTGitPath(pszSrcFile, true));
 				break;
+			}
 			case ShellCache::dll:
 			case ShellCache::dllFull:
 			{
