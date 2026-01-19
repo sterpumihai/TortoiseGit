@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2012, 2014-2019, 2023, 2025 - TortoiseGit
+// Copyright (C) 2012, 2014-2019, 2023, 2025-2026 - TortoiseGit
 // Copyright (C) 2003-2006, 2009, 2015 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -23,6 +23,7 @@
 #include "CacheInterface.h"
 #include "CacheDlg.h"
 #include <random>
+#include "scope_exit_noexcept.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -33,6 +34,7 @@ CCacheDlg::CCacheDlg(CWnd* pParent /*=nullptr*/)
 : CDialog(CCacheDlg::IDD, pParent)
 {
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
+	m_sRootPath = CPathUtils::GetCWD();
 }
 
 void CCacheDlg::DoDataExchange(CDataExchange* pDX)
@@ -113,30 +115,39 @@ UINT CCacheDlg::TestThreadEntry(LPVOID pVoid)
 //this is the thread function which calls the subversion function
 UINT CCacheDlg::TestThread()
 {
+	EnDisableButtons(false);
+	SCOPE_EXIT{ EnDisableButtons(true); };
 	CDirFileEnum direnum(m_sRootPath);
-	m_filelist.RemoveAll();
+	CStringArray filelist;
 	while (auto file = direnum.NextFile())
 	{
 		CString filepath = file->GetFilePath();
 		if (filepath.Find(L".git") < 0)
-			m_filelist.Add(filepath);
+			filelist.Add(filepath);
+	}
+
+	if (filelist.IsEmpty())
+	{
+		MessageBox(L"Invalid path or empty", L"CacheDlg", 0);
+		return 0;
 	}
 
 	CTime starttime = CTime::GetCurrentTime();
 	GetDlgItem(IDC_STARTTIME)->SetWindowText(starttime.Format(L"%H:%M:%S"));
+	GetDlgItem(IDC_ENDTIME)->SetWindowText(L"");
 
 	ULONGLONG startticks = GetTickCount64();
 
 	CString sNumber;
 	std::random_device rd;
 	std::mt19937 mt(rd());
-	std::uniform_int_distribution<INT_PTR> dist(0, max(INT_PTR(0), m_filelist.GetCount() - 1));
+	std::uniform_int_distribution<INT_PTR> dist(0, max(INT_PTR(0), filelist.GetCount() - 1));
 	std::uniform_int_distribution<INT_PTR> dist2(0, 9);
 	for (int i=0; i < 1; ++i)
 	{
 		CString filepath2;
 		//do {
-			filepath2 = m_filelist.GetAt(dist(mt));
+			filepath2 = filelist.GetAt(dist(mt));
 		//}while(filepath.Find(L".git") >= 0);
 		GetDlgItem(IDC_FILEPATH)->SetWindowText(filepath2);
 		GetStatusFromRemoteCache(CTGitPath(filepath2), true);
@@ -401,25 +412,34 @@ UINT CCacheDlg::WatchTestThreadEntry(LPVOID pVoid)
 //this is the thread function which calls the subversion function
 UINT CCacheDlg::WatchTestThread()
 {
+	EnDisableButtons(false);
+	SCOPE_EXIT{ EnDisableButtons(true); };
 	CDirFileEnum direnum(m_sRootPath);
-	m_filelist.RemoveAll();
+	CStringArray filelist;
 	while (auto file = direnum.NextFile())
-		m_filelist.Add(file->GetFilePath());
+		filelist.Add(file->GetFilePath());
+
+	if (filelist.IsEmpty())
+	{
+		MessageBox(L"Invalid path or empty", L"CacheDlg", 0);
+		return 0;
+	}
 
 	CTime starttime = CTime::GetCurrentTime();
 	GetDlgItem(IDC_STARTTIME)->SetWindowText(starttime.Format(L"%H:%M:%S"));
+	GetDlgItem(IDC_ENDTIME)->SetWindowText(L"");
 
 	ULONGLONG startticks = GetTickCount64();
 
 	CString sNumber;
 	std::random_device rd;
 	std::mt19937 mt(rd());
-	std::uniform_int_distribution<INT_PTR> dist(0, max(INT_PTR(0), m_filelist.GetCount() - 1));
-	CString filepath = m_filelist.GetAt(dist(mt));
+	std::uniform_int_distribution<INT_PTR> dist(0, max(INT_PTR(0), filelist.GetCount() - 1));
+	CString filepath = filelist.GetAt(dist(mt));
 	GetStatusFromRemoteCache(CTGitPath(m_sRootPath), false);
 	for (int i=0; i < 10000; ++i)
 	{
-		filepath = m_filelist.GetAt(dist(mt));
+		filepath = filelist.GetAt(dist(mt));
 		GetDlgItem(IDC_FILEPATH)->SetWindowText(filepath);
 		TouchFile(filepath);
 		CopyRemoveCopy(filepath);
@@ -500,4 +520,10 @@ void CCacheDlg::CopyRemoveCopy(const CString& path)
 	}
 	else
 		MessageBox(L"could not copy file!", path);
+}
+
+void CCacheDlg::EnDisableButtons(bool enable)
+{
+	GetDlgItem(IDOK)->EnableWindow(enable);
+	GetDlgItem(IDC_WATCHTESTBUTTON)->EnableWindow(enable);
 }

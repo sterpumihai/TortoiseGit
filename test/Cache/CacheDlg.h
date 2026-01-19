@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2023 - TortoiseGit
+// Copyright (C) 2023, 2026 - TortoiseGit
 // Copyright (C) 2003-2006 - Stefan Kueng
 
 // This program is free software; you can redistribute it and/or
@@ -48,11 +48,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 
 	CString m_sRootPath;
-	CStringArray m_filelist;
 	HANDLE m_hPipe = INVALID_HANDLE_VALUE;
 	OVERLAPPED m_Overlapped{};
 	HANDLE m_hEvent = nullptr;
-	CComCriticalSection m_critSec;
 	static UINT TestThreadEntry(LPVOID pVoid);
 	UINT TestThread();
 	void ClosePipe();
@@ -62,6 +60,7 @@ protected:
 
 	void TouchFile(const CString& path);
 	void CopyRemoveCopy(const CString& path);
+	void EnDisableButtons(bool enable);
 
 	static UINT WatchTestThreadEntry(LPVOID pVoid);
 	UINT WatchTestThread();
