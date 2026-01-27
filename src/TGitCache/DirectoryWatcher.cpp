@@ -457,18 +457,16 @@ void CDirectoryWatcher::WorkerThread()
 									continue;
 								}
 
-								CTGitPath path;
 								if ((pFound = wcsstr(buf, L"\\.git")) != nullptr && (pFound[wcslen(L"\\.git")] == L'\\' || pFound[wcslen(L"\\.git")] == L'\0')) // Is it (inside) the .git folder?
 								{
 									// omit repository data change except .git/index.lock- or .git/HEAD.lock-files
 									if (reinterpret_cast<ULONG_PTR>(pnotify) - reinterpret_cast<ULONG_PTR>(pdi->m_Buffer) > READ_DIR_CHANGE_BUFFER_SIZE)
 										break;
 
-									path = g_AdminDirMap.GetWorkingCopy(CTGitPath(buf).GetContainingDirectory().GetWinPathString());
-
 									if ((pnotify->Action == FILE_ACTION_ADDED || pnotify->Action == FILE_ACTION_RENAMED_NEW_NAME) && (wcsstr(pFound, L"index.lock") || wcsstr(pFound, L"HEAD.lock")))
 									{
 										// Lock got added, block path from crawling.
+										CTGitPath path = g_AdminDirMap.GetWorkingCopy(CTGitPath(buf).GetContainingDirectory().GetWinPathString());
 										CGitStatusCache::Instance().BlockPath(path);
 									}
 									else if (
@@ -478,13 +476,13 @@ void CDirectoryWatcher::WorkerThread()
 									{
 										// Lock got removed, unblock path from crawling. This will cause a recursive crawl because we don't know
 										// what we missed during the lock
+										CTGitPath path = g_AdminDirMap.GetWorkingCopy(CTGitPath(buf).GetContainingDirectory().GetWinPathString());
 										CGitStatusCache::Instance().UnBlockPath(path);
 									}
 									continue;
 								}
-								else
-									path.SetFromUnknown(buf);
 
+								CTGitPath path(buf);
 								if (!path.HasAdminDir())
 									continue;
 
