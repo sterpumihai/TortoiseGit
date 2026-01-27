@@ -458,7 +458,6 @@ void CDirectoryWatcher::WorkerThread()
 								}
 
 								CTGitPath path;
-								bool isIndex = false;
 								if ((pFound = wcsstr(buf, L"\\.git")) != nullptr && (pFound[wcslen(L"\\.git")] == L'\\' || pFound[wcslen(L"\\.git")] == L'\0')) // Is it (inside) the .git folder?
 								{
 									// omit repository data change except .git/index.lock- or .git/HEAD.lock-files
@@ -469,24 +468,24 @@ void CDirectoryWatcher::WorkerThread()
 
 									if ((pnotify->Action == FILE_ACTION_ADDED || pnotify->Action == FILE_ACTION_RENAMED_NEW_NAME) && (wcsstr(pFound, L"index.lock") || wcsstr(pFound, L"HEAD.lock")))
 									{
+										// Lock got added, block path from crawling.
 										CGitStatusCache::Instance().BlockPath(path);
-										continue;
 									}
 									else if (
 										((pnotify->Action == FILE_ACTION_REMOVED || pnotify->Action == FILE_ACTION_RENAMED_OLD_NAME) && (wcsstr(pFound, L"index.lock") || wcsstr(pFound, L"HEAD.lock"))) ||
 										(pnotify->Action == FILE_ACTION_MODIFIED && ((wcsstr(pFound, L"index") && !wcsstr(pFound, L"index.lock")) || (wcsstr(pFound, L"HEAD") && !wcsstr(pFound, L"HEAD.lock"))))
 										)
 									{
-										isIndex = true;
-										CGitStatusCache::Instance().BlockPath(path, 1);
+										// Lock got removed, unblock path from crawling. This will cause a recursive crawl because we don't know
+										// what we missed during the lock
+										CGitStatusCache::Instance().UnBlockPath(path);
 									}
-									else
-										continue;
+									continue;
 								}
 								else
 									path.SetFromUnknown(buf);
 
-								if(!path.HasAdminDir() && !isIndex)
+								if (!path.HasAdminDir())
 									continue;
 
 								CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": change notification for %s\n", buf);
