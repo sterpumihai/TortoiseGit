@@ -467,7 +467,7 @@ void CDirectoryWatcher::WorkerThread()
 
 									path = g_AdminDirMap.GetWorkingCopy(CTGitPath(buf).GetContainingDirectory().GetWinPathString());
 
-									if ((wcsstr(pFound, L"index.lock") || wcsstr(pFound, L"HEAD.lock")) && pnotify->Action == FILE_ACTION_ADDED)
+									if ((wcsstr(pFound, L"index.lock") || wcsstr(pFound, L"HEAD.lock")) && (pnotify->Action == FILE_ACTION_ADDED || pnotify->Action == FILE_ACTION_RENAMED_NEW_NAME))
 									{
 										CGitStatusCache::Instance().BlockPath(path);
 										continue;
