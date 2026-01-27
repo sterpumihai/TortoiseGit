@@ -474,8 +474,8 @@ void CDirectoryWatcher::WorkerThread()
 									}
 									else if (
 										((wcsstr(pFound, L"index.lock") || wcsstr(pFound, L"HEAD.lock")) && pnotify->Action == FILE_ACTION_REMOVED) ||
-										(((wcsstr(pFound, L"index") && !wcsstr(pFound, L"index.lock")) || (wcsstr(pFound, L"HEAD") && wcsstr(pFound, L"HEAD.lock"))) && pnotify->Action == FILE_ACTION_MODIFIED) ||
-										((!wcsstr(pFound, L"index.lock") || wcsstr(pFound, L"HEAD.lock")) && pnotify->Action == FILE_ACTION_RENAMED_NEW_NAME)
+										(((wcsstr(pFound, L"index") && !wcsstr(pFound, L"index.lock")) || (wcsstr(pFound, L"HEAD") && !wcsstr(pFound, L"HEAD.lock"))) && pnotify->Action == FILE_ACTION_MODIFIED) ||
+										((wcsstr(pFound, L"index.lock") || wcsstr(pFound, L"HEAD.lock")) && pnotify->Action == FILE_ACTION_RENAMED_NEW_NAME)
 										)
 									{
 										isIndex = true;
