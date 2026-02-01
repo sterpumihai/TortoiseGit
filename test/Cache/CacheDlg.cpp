@@ -282,7 +282,7 @@ bool CCacheDlg::GetStatusFromRemoteCache(const CTGitPath& Path, bool bRecursive)
 
 	DWORD nBytesRead;
 	TGITCacheRequest request;
-	request.flags = TGITCACHE_FLAGS_NONOTIFICATIONS;
+	request.flags = 0;
 	if(bRecursive)
 	{
 		request.flags |= TGITCACHE_FLAGS_RECUSIVE_STATUS;

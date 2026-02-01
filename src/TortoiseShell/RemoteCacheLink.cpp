@@ -176,7 +176,7 @@ bool CRemoteCacheLink::GetStatusFromRemoteCache(const CTGitPath& Path, TGITCache
 
 	DWORD nBytesRead;
 	TGITCacheRequest request;
-	request.flags = TGITCACHE_FLAGS_NONOTIFICATIONS;
+	request.flags = 0;
 	if(bRecursive)
 		request.flags |= TGITCACHE_FLAGS_RECUSIVE_STATUS;
 	wcsncpy_s(request.path, Path.GetWinPath(), _countof(request.path) - 1);
