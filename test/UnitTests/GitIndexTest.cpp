@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2015-2020, 2023-2025 - TortoiseGit
+// Copyright (C) 2015-2020, 2023-2026 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -71,7 +71,7 @@ protected:
 
 		//====Sub-Module Inside of The Main Work Tree (Root Level)====
 		output.Empty();
-		EXPECT_EQ(0, m_Git.Run(L"git.exe submodule add \"" + m_SubmoduleSource + L"\" sub1", &output, nullptr, CP_UTF8));
+		EXPECT_EQ(0, m_Git.Run(L"git.exe -c protocol.file.allow=always submodule add \"" + m_SubmoduleSource + L"\" sub1", &output, nullptr, CP_UTF8));
 		EXPECT_STREQ(L"", output);
 
 		output.Empty();
