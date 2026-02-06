@@ -51,7 +51,7 @@
 			was introduced in Windows 10 version 1607 with the build number 14393. So check
 			the build number of user32.dll that contains this function.
 		-->
-		<Property Id="WIN10_1607_FOUND">
+		<Property Id="WIN10_1607_FOUND" Secure="yes">
 			<!-- Search in [SystemFolder] to support the 32-bit version of Windows 10. -->
 			<DirectorySearch Id="searchSystem10" Path="[SystemFolder]" AssignToProperty="yes">
 				<FileSearch Id="searchFile10" Name="shell32.dll" MinVersion="6.3.14392.0"/>
@@ -59,7 +59,7 @@
 		</Property>
 		<Condition Message="[ProductName] requires Windows 10 version 1607 or later.">WIN10_1607_FOUND OR Installed</Condition>
 
-		<Property Id="VC_REDIST_INSTALLED">
+		<Property Id="VC_REDIST_INSTALLED" Secure="yes">
 			<?if ($(var.Platform) = "x64" OR $(var.Platform) = "ARM64") ?>
 			<DirectorySearch Id="searchSystemVCRedist" Path="[System64Folder]" Depth="0">
 				<FileSearch Id="searchFileVCRedist" Name="vcruntime140.dll" MinVersion="14.42"/>

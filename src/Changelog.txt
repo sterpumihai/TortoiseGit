@@ -13,6 +13,7 @@ Released: unreleased
 * TGitCache: Only crawl non-recursively when DirectoryWatcher detects changes to improve performance
 * TGitCache: Add shortcut for ignored folders
 * Fixed issue #4003: TortoiseGitCache slows down deleting folders with many subfolders
+* Fixed issue #4251: Installer complains to require Windows >= 10 on Windows 11 if AlwaysInstallElevated is set
 
 = Release 2.18.0.1 =
 Released: 2025-12-01
