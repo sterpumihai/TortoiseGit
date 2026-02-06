@@ -2551,6 +2551,9 @@ static bool DoFetch(HWND hWnd, const CString& url, const bool fetchAllRemotes, c
 	CString cmd, arg;
 	arg = L" --progress";
 
+	if (CRegDWORD(L"Software\\TortoiseGit\\FetchVerbose", TRUE) == TRUE)
+		arg += L" -v";
+
 	if (bDepth)
 		arg.AppendFormat(L" --depth %d", nDepth);
 
@@ -2565,9 +2568,9 @@ static bool DoFetch(HWND hWnd, const CString& url, const bool fetchAllRemotes, c
 		arg += L" --no-tags";
 
 	if (fetchAllRemotes)
-		cmd.Format(L"git.exe fetch --all -v%s", static_cast<LPCWSTR>(arg));
+		cmd.Format(L"git.exe fetch --all %s", static_cast<LPCWSTR>(arg));
 	else
-		cmd.Format(L"git.exe fetch -v%s -- \"%s\" %s", static_cast<LPCWSTR>(arg), static_cast<LPCWSTR>(url), static_cast<LPCWSTR>(remoteBranch));
+		cmd.Format(L"git.exe fetch %s -- \"%s\" %s", static_cast<LPCWSTR>(arg), static_cast<LPCWSTR>(url), static_cast<LPCWSTR>(remoteBranch));
 
 	CProgressDlg progress(GetParentCWnd(hWnd));
 	progress.m_PostCmdCallback = [&](DWORD status, PostCmdList& postCmdList)

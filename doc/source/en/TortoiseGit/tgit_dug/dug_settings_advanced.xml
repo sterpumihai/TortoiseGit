@@ -169,6 +169,16 @@
 			</listitem>
 		</varlistentry>
 		<varlistentry>
+			<term condition="pot">FetchVerbose</term>
+			<listitem>
+				<para>
+					Determines if <literal>git fetch</literal> uses verbose output.
+					Default value is <literal>true</literal>;
+					set to <literal>false</literal> to disable.
+				</para>
+			</listitem>
+		</varlistentry>
+		<varlistentry>
 			<term condition="pot">FullRowSelect</term>
 			<listitem>
 				<para>

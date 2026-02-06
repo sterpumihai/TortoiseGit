@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2025 - TortoiseGit
+// Copyright (C) 2008-2026 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -431,7 +431,11 @@ void CSyncDlg::OnBnClickedButtonPull()
 		}
 		else
 		{
-			cmd.Format(L"git.exe fetch --progress -v%s -- \"%s\" %s",
+			CString args;
+			if (CRegDWORD(L"Software\\TortoiseGit\\FetchVerbose", TRUE) == TRUE)
+				args += L" -v";
+			cmd.Format(L"git.exe fetch --progress%s%s -- \"%s\" %s",
+					static_cast<LPCWSTR>(args),
 					static_cast<LPCWSTR>(force),
 					static_cast<LPCWSTR>(m_strURL),
 					static_cast<LPCWSTR>(remotebranch));
