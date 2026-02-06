@@ -1,7 +1,7 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
 // External Cache Copyright (C) 2005-2006,2008,2010,2014 - TortoiseSVN
-// Copyright (C) 2008-2019, 2021, 2023 - TortoiseGit
+// Copyright (C) 2008-2019, 2021, 2023, 2026 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -307,24 +307,26 @@ bool CGitStatusCache::UnBlockPath(const CTGitPath& path)
 	return ret;
 }
 
-bool CGitStatusCache::RemoveTimedoutBlocks()
+ULONGLONG CGitStatusCache::RemoveTimedoutBlocks()
 {
-	bool ret = false;
 	ULONGLONG currentTicks = GetTickCount64();
 	AutoLocker lock(m_NoWatchPathCritSec);
 	std::vector<CTGitPath> toRemove;
+	ULONGLONG timeUntilNextTimeout = BLOCK_PATH_MAX_TIMEOUT * 1000;
 	for (auto it = m_NoWatchPaths.cbegin(); it != m_NoWatchPaths.cend(); ++it)
 	{
 		if (currentTicks > it->second)
 			toRemove.push_back(it->first);
+		else
+			timeUntilNextTimeout = std::min(timeUntilNextTimeout, it->second-currentTicks);
 	}
 	if (!toRemove.empty())
 	{
 		for (auto it = toRemove.cbegin(); it != toRemove.cend(); ++it)
-			ret = ret || UnBlockPath(*it);
+			UnBlockPath(*it);
 	}
 
-	return ret;
+	return timeUntilNextTimeout;
 }
 
 void CGitStatusCache::UpdateShell(const CTGitPath& path)

@@ -1,7 +1,7 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
 // External Cache Copyright (C) 2005-2007, 2009-2011, 2014 TortoiseSVN
-// Copyright (C) 2008-2012, 2023, 2025 - TortoiseGit
+// Copyright (C) 2008-2012, 2023, 2025-2026 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -44,6 +44,7 @@ public:
 	void AddDirectoryForUpdate(const CTGitPath& path);
 	void AddPathForUpdate(const CTGitPath& path);
 	void ReleasePathForUpdate(const CTGitPath& path);
+	void WakeUp();
 	void Stop();
 	bool SetHoldoff(DWORD milliseconds = 100);
 	void BlockPath(const CTGitPath& path, DWORD ticks = 0);

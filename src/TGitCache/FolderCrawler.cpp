@@ -115,6 +115,11 @@ void CFolderCrawler::ReleasePathForUpdate(const CTGitPath& path)
 	SetEvent(m_hWakeEvent);
 }
 
+void CFolderCrawler::WakeUp()
+{
+	SetEvent(m_hWakeEvent);
+}
+
 unsigned int CFolderCrawler::ThreadEntry(void* pContext)
 {
 	reinterpret_cast<CFolderCrawler*>(pContext)->WorkerThread();
@@ -180,7 +185,7 @@ void CFolderCrawler::WorkerThread()
 				CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": Crawl stop blocking path %s\n", m_blockedPath.GetWinPath());
 				m_blockedPath.Reset();
 			}
-			CGitStatusCache::Instance().RemoveTimedoutBlocks();
+			ULONGLONG timeUntilNextTimedoutBlock = CGitStatusCache::Instance().RemoveTimedoutBlocks();
 
 			while (!m_pathsToRelease.empty())
 			{
@@ -191,6 +196,12 @@ void CFolderCrawler::WorkerThread()
 
 			if (m_foldersToUpdate.empty() && m_pathsToUpdate.empty())
 			{
+				if (timeUntilNextTimedoutBlock <= BLOCK_PATH_WAIT_AFTER_UNLOCK * 1000)
+				{
+					CTraceToOutputDebugString::Instance()(_T(__FUNCTION__) L": Waiting for block to be released soon\n");
+					Sleep(100);
+					continue;
+				}
 				// Nothing left to do
 				break;
 			}

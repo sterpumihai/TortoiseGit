@@ -29,6 +29,8 @@
 #include <atlcoll.h>
 //////////////////////////////////////////////////////////////////////////
 
+#define BLOCK_PATH_WAIT_AFTER_UNLOCK 2 // time in seconds to keep a block after the lockfile is deleted
+
 /**
  * \ingroup TGitCache
  * The main class handling the status cache.
@@ -94,7 +96,7 @@ public:
 	bool AddPathToWatch(const CTGitPath& path) {return watcher.AddPath(path);}
 	bool BlockPath(const CTGitPath& path, ULONGLONG timeout = 0);
 	bool UnBlockPath(const CTGitPath& path);
-	bool RemoveTimedoutBlocks();
+	ULONGLONG RemoveTimedoutBlocks(); // Returns time until next timeout in milliseconds
 
 	CReaderWriterLock& GetGuard() { return m_guard; }
 	bool m_bClearMemory = false;
