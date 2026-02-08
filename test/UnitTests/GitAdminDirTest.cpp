@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2015-2017, 2019, 2025 - TortoiseGit
+// Copyright (C) 2015-2017, 2019, 2025-2026 - TortoiseGit
 // Copyright (C) 2003-2008 - TortoiseSVN
 
 // This program is free software; you can redistribute it and/or
@@ -232,6 +232,26 @@ TEST(CGitAdminDir, HasAdminDir_bareRepo)
 	EXPECT_FALSE(GitAdminDir::HasAdminDir(tmpDir.GetTempDir()));
 
 	EXPECT_FALSE(GitAdminDir::IsBareRepo(tmpDir.GetTempDir() + L"\\objects"));
+}
+
+TEST(CGitAdminDir, HasAdminDir_bareRepoInRegularRepo)
+{
+	CAutoTempDir tmpDir;
+
+	EXPECT_FALSE(GitAdminDir::HasAdminDir(tmpDir.GetTempDir()));
+
+	CAutoRepository repo;
+	ASSERT_TRUE(git_repository_init(repo.GetPointer(), CUnicodeUtils::GetUTF8(tmpDir.GetTempDir()), false) == 0);
+	CAutoRepository bareRepo;
+	ASSERT_TRUE(git_repository_init(bareRepo.GetPointer(), CUnicodeUtils::GetUTF8(tmpDir.GetTempDir() + L"\\bare"), true) == 0);
+
+	EXPECT_TRUE(GitAdminDir::HasAdminDir(tmpDir.GetTempDir()));
+	EXPECT_FALSE(GitAdminDir::HasAdminDir(tmpDir.GetTempDir() + L"\\bare"));
+	EXPECT_FALSE(GitAdminDir::HasAdminDir(tmpDir.GetTempDir() + L"\\bare\\objects"));
+
+	EXPECT_FALSE(GitAdminDir::IsBareRepo(tmpDir.GetTempDir()));
+	EXPECT_TRUE(GitAdminDir::IsBareRepo(tmpDir.GetTempDir() + L"\\bare"));
+	EXPECT_FALSE(GitAdminDir::IsBareRepo(tmpDir.GetTempDir() + L"\\bare\\objects"));
 }
 
 TEST(CGitAdminDir, HasAdminDir_ReferencedRepo)
