@@ -1,6 +1,6 @@
 ﻿// TortoiseGit - a Windows shell extension for easy version control
 
-// Copyright (C) 2008-2025 - TortoiseGit
+// Copyright (C) 2008-2026 - TortoiseGit
 
 // This program is free software; you can redistribute it and/or
 // modify it under the terms of the GNU General Public License
@@ -106,9 +106,9 @@ int git_init(const LPWSTR* env)
 	reset_git_env(env);
 	assert(getenv("HOME")); // make sure HOME is already set
 	drop_all_attr_stacks();
-	git_config_clear();
+	repo_config_clear(the_repository);
 	g_prefix = setup_git_directory();
-	git_config(git_default_config, NULL);
+	repo_config(the_repository, git_default_config, NULL);
 	ref_store_release_and_clear(the_repository);
 	clear_ref_decorations();
 
@@ -516,7 +516,7 @@ int git_open_diff(GIT_DIFF* diff, const char* arg)
 	*diff = (GIT_DIFF)p_Rev;
 
 	repo_init_revisions(the_repository, p_Rev, g_prefix);
-	git_config(git_diff_basic_config, NULL); /* no "diff" UI options */
+	repo_config(the_repository, git_diff_basic_config, NULL); /* no "diff" UI options */
 	p_Rev->abbrev = 0;
 	p_Rev->diff = 1;
 	argc = setup_revisions(argc, argv, p_Rev, NULL);
@@ -991,7 +991,7 @@ int git_set_config(const char* key, const char* value, CONFIG_TYPE type)
 	if(!config_exclusive_filename)
 		return -1;
 
-	ret = git_config_set_multivar_in_file_gently(config_exclusive_filename, key, value, NULL, NULL, 0);
+	ret = repo_config_set_multivar_in_file_gently(the_repository, config_exclusive_filename, key, value, NULL, NULL, 0);
 	free(config_exclusive_filename);
 	return ret;
 }
