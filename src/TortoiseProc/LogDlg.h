@@ -232,7 +232,7 @@ private:
 	CFilterEdit			m_cFileFilter;
 
 	int					m_iHidePaths = 0;
-	bool				m_bFirstParent = false;
+	bool				m_bFirstParent = true;
 	bool				m_bFullHistory = false;
 	BOOL				m_bAllBranch = FALSE;		// variable for checkbox only
 	AllBranchType		m_AllBranchType;	// variable for actual branch type

@@ -469,7 +469,7 @@ public:
 	std::atomic<std::shared_ptr<RollUpStateMap>> m_RollUpStates = std::make_shared<RollUpStateMap>();
 
 	CTGitPath			m_Path;
-	int					m_ShowMask = 0;
+	int					m_ShowMask = CGit::LOG_INFO_FIRST_PARENT;
 	std::atomic<CGitHash>	m_lastSelectedHash;
 	SelectionHistory	m_selectionHistory;
 	CGitHash			m_highlight;

@@ -30,6 +30,7 @@
 #include "../TortoiseShell/Resource.h"
 #include "CommonAppUtils.h"
 #include "DPIAware.h"
+#include <regex>
 
 const UINT CGitLogListBase::m_FindDialogMessage = RegisterWindowMessage(FINDMSGSTRING);
 const UINT CGitLogListBase::m_ScrollToMessage = RegisterWindowMessage(L"TORTOISEGIT_LOG_SCROLLTO");
@@ -1536,7 +1537,12 @@ CString CGitLogListBase::MessageDisplayStr(GitRev* pLogEntry)
 
 	CString txt(pLogEntry->GetSubject());
 	txt += L' ';
-	txt += pLogEntry->GetBody();
+	CString body = pLogEntry->GetBody();
+	CT2CA pszBodyStr(body);
+	std::string bodyStr(pszBodyStr);
+	std::regex re("\\s*git-svn-id:.*\\n");
+	std::string modifiedStr = std::regex_replace(bodyStr, re, "\n", std::regex_constants::match_default);
+	txt += modifiedStr.c_str();
 
 	// Deal with CRLF
 	txt.Replace(L'\n', L' ');
